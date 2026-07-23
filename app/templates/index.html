@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>MSG PDF Converter</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="brand"><span aria-hidden="true">↳</span> MSG PDF Converter</div>
+      <p class="kicker">Lokal. Vertraulich. Vollständig.</p>
+      <h1 id="page-title">Aus Outlook-Mails werden vollständige PDFs.</h1>
+      <p class="lead">Die E-Mail wird zur lesbaren PDF. Ihre Originalanlagen bleiben als echte Dateianlagen in der PDF erhalten.</p>
+      <ul class="features">
+        <li><span>01</span> Keine Cloud-Übertragung</li>
+        <li><span>02</span> Mehrere MSG-Dateien auf einmal</li>
+        <li><span>03</span> Anlagen unverändert eingebettet</li>
+      </ul>
+    </section>
+
+    <section class="converter" aria-labelledby="converter-title">
+      <div class="panel-heading">
+        <div>
+          <p class="step">Konvertierung</p>
+          <h2 id="converter-title">MSG-Dateien auswählen</h2>
+        </div>
+        <span class="privacy-badge">Nur lokal verarbeitet</span>
+      </div>
+
+      <form id="convert-form" action="{{ url_for('web.convert') }}" method="post" enctype="multipart/form-data">
+        <label class="dropzone" id="dropzone" for="files">
+          <input id="files" name="files" type="file" accept=".msg,application/vnd.ms-outlook" multiple required>
+          <span class="file-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img">
+              <path d="M12 5h16l8 8v30H12z"></path>
+              <path d="M28 5v9h8M18 25h12M18 31h12"></path>
+            </svg>
+          </span>
+          <strong>Dateien hier ablegen</strong>
+          <span>oder zum Auswählen klicken</span>
+          <small>Outlook .msg · maximal {{ max_upload_mb }} MB pro Upload</small>
+        </label>
+
+        <div id="file-list" class="file-list" hidden></div>
+
+        <label class="option">
+          <input type="checkbox" name="include_original" checked>
+          <span class="checkmark" aria-hidden="true"></span>
+          <span>
+            <strong>Originale MSG-Datei ebenfalls einbetten</strong>
+            <small>Empfohlen für eine möglichst vollständige Archivkopie</small>
+          </span>
+        </label>
+
+        <div id="error" class="message error" role="alert" hidden></div>
+        <div id="progress" class="message progress" role="status" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          PDF wird erstellt und Anlagen werden eingebettet …
+        </div>
+
+        <button id="submit-button" type="submit">
+          <span>PDF erstellen</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </form>
+
+      <p class="footnote">Die Dateien werden nur im Arbeitsspeicher und im temporären Container-Verzeichnis verarbeitet.</p>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

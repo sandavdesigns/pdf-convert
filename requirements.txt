@@ -1,0 +1,6 @@
+Flask>=3.1,<4
+beautifulsoup4>=4.12,<4.13
+extract-msg>=0.49,<0.50
+gunicorn>=23,<24
+pikepdf>=10,<11
+weasyprint>=66,<67

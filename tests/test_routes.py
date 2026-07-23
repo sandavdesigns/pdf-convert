@@ -1,0 +1,62 @@
+import io
+
+from app import create_app
+
+
+def client():
+    app = create_app({"TESTING": True, "MAX_CONTENT_LENGTH": 1024 * 1024, "MAX_UPLOAD_MB": 1})
+    return app.test_client()
+
+
+def test_index_and_health():
+    test_client = client()
+    response = test_client.get("/")
+    assert response.status_code == 200
+    assert "default-src 'self'" in response.headers["Content-Security-Policy"]
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert test_client.get("/health").json == {"status": "ok"}
+
+
+def test_convert_requires_file():
+    response = client().post("/convert")
+    assert response.status_code == 400
+    assert "mindestens" in response.json["error"]
+
+
+def test_convert_rejects_wrong_extension():
+    response = client().post(
+        "/convert",
+        data={"files": (io.BytesIO(b"hello"), "mail.eml")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+    assert "MSG" in response.json["error"]
+
+
+def test_convert_reports_invalid_msg():
+    response = client().post(
+        "/convert",
+        data={"files": (io.BytesIO(b"hello"), "mail.msg")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 422
+    assert "gültige" in response.json["error"]
+
+
+def test_convert_returns_generated_pdf(monkeypatch):
+    monkeypatch.setattr(
+        "app.routes.convert_many",
+        lambda files, include_original: (b"%PDF-test", "mail.pdf", "application/pdf"),
+    )
+    response = client().post(
+        "/convert",
+        data={
+            "files": (io.BytesIO(b"valid-for-mock"), "mail.msg"),
+            "include_original": "on",
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200
+    assert response.data == b"%PDF-test"
+    assert response.mimetype == "application/pdf"
+    assert "mail.pdf" in response.headers["Content-Disposition"]
