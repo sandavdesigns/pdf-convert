@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 96" role="img" aria-labelledby="title description">
+  <title id="title">MSG PDF Converter</title>
+  <desc id="description">Ein Dokument mit Büroklammer neben dem Schriftzug MSG PDF Converter.</desc>
+  <defs>
+    <linearGradient id="blue" x1="12" y1="8" x2="82" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2B7CF0"/>
+      <stop offset="1" stop-color="#0E4FAE"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4 4) scale(.9167)">
+    <rect width="96" height="96" rx="27" fill="url(#blue)"/>
+    <path d="M25 16h29l16 16v41a7 7 0 0 1-7 7H25a7 7 0 0 1-7-7V23a7 7 0 0 1 7-7Z" fill="#fff"/>
+    <path d="M54 16v12a5 5 0 0 0 5 5h11" fill="#DCEAFF" stroke="#B7D3FA" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M30 43h25M30 52h25" fill="none" stroke="#1769E0" stroke-width="4" stroke-linecap="round"/>
+    <path d="m51 70 13-13a8 8 0 0 1 11.3 11.3L62 81.6a11 11 0 0 1-15.6-15.6L59 53.4"
+          fill="none" stroke="#FFB72B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="112" y="42" fill="#14213D" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="31" font-weight="760" letter-spacing="-1">MSG PDF</text>
+  <text x="113" y="69" fill="#1769E0" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="16" font-weight="750" letter-spacing="4.5">CONVERTER</text>
+</svg>

@@ -4,13 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#1769e0">
   <title>MSG PDF Converter</title>
+  <link rel="icon" href="{{ url_for('static', filename='brand/favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
   <main class="shell">
     <section class="intro" aria-labelledby="page-title">
-      <div class="brand"><span aria-hidden="true">↳</span> MSG PDF Converter</div>
+      <div class="brand">
+        <img class="brand-mark" src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="">
+        <span>MSG PDF Converter</span>
+      </div>
       <p class="kicker">Lokal. Vertraulich. Vollständig.</p>
       <h1 id="page-title">Aus Outlook-Mails werden vollständige PDFs.</h1>
       <p class="lead">Die E-Mail wird zur lesbaren PDF. Ihre Originalanlagen bleiben als echte Dateianlagen in der PDF erhalten.</p>
