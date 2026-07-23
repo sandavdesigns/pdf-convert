@@ -59,15 +59,11 @@ body::before {
   text-transform: uppercase;
 }
 
-.brand span {
-  display: grid;
+.brand-mark {
   width: 30px;
   height: 30px;
-  place-items: center;
-  color: white;
-  background: var(--blue);
-  border-radius: 9px;
-  font-size: 1.1rem;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 4px 7px rgba(23, 105, 224, 0.2));
 }
 
 .kicker,
@@ -425,4 +421,3 @@ button:disabled {
     animation-iteration-count: 1 !important;
   }
 }
-

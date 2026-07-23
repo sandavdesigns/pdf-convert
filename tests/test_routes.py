@@ -12,6 +12,10 @@ def test_index_and_health():
     test_client = client()
     response = test_client.get("/")
     assert response.status_code == 200
+    assert b"brand/logo-mark.svg" in response.data
+    assert b"brand/favicon.svg" in response.data
+    assert test_client.get("/static/brand/logo-mark.svg").status_code == 200
+    assert test_client.get("/static/brand/favicon.svg").status_code == 200
     assert "default-src 'self'" in response.headers["Content-Security-Policy"]
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert test_client.get("/health").json == {"status": "ok"}
