@@ -29,7 +29,7 @@ Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in le
    https://github.com/sandavdesigns/pdf-convert.git
    ```
 
-4. Als Compose-Pfad `compose.yaml` eintragen.
+4. Als Compose-Pfad `docker-compose.yml` eintragen. Portainer findet diese Datei auch als Standard automatisch.
 5. Optional die Umgebungsvariablen anpassen:
 
    - `PDF_CONVERT_PORT=8080`
