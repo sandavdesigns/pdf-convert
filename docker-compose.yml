@@ -1,8 +1,7 @@
 services:
   pdf-convert:
-    build:
-      context: .
-    image: pdf-convert:local
+    image: ghcr.io/sandavdesigns/pdf-convert:latest
+    pull_policy: always
     container_name: pdf-convert
     restart: unless-stopped
     ports:
