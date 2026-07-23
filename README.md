@@ -19,6 +19,19 @@ Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in le
 
 ## Portainer
 
+Portainer muss dieses Repository nicht selbst bauen. Der Stack verwendet das
+fertige Image `ghcr.io/sandavdesigns/pdf-convert:latest`.
+
+### Image einmalig veröffentlichen
+
+1. In GitHub **Actions** öffnen.
+2. Den Workflow **Build container image** auswählen.
+3. **Run workflow** auf dem Branch `main` starten.
+4. Nach erfolgreichem Lauf das Paket `pdf-convert` im GitHub-Profil öffnen und
+   unter **Package settings → Change visibility** auf **Public** stellen.
+
+Öffentliche GHCR-Images können von Portainer ohne Registry-Zugang geladen werden.
+
 ### Stack direkt aus diesem Repository
 
 1. In Portainer **Stacks** und anschließend **Add stack** öffnen.
@@ -29,20 +42,19 @@ Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in le
    https://github.com/sandavdesigns/pdf-convert.git
    ```
 
-4. Als Compose-Pfad `docker-compose.yml` eintragen. Portainer findet diese Datei auch als Standard automatisch.
-5. Optional die Umgebungsvariablen anpassen:
+4. Als Repository-Referenz `main` und als Compose-Pfad `docker-compose.yml` eintragen.
+5. **Re-pull image** aktivieren.
+6. Optional die Umgebungsvariablen anpassen:
 
    - `PDF_CONVERT_PORT=8080`
    - `MAX_UPLOAD_MB=100`
 
-6. Stack deployen und anschließend `http://SERVER-IP:8080` öffnen.
-
-Portainer muss das Image aus dem Repository bauen können. Falls die verwendete Portainer-Umgebung keine Compose-Builds unterstützt, das Image zunächst per CLI bauen oder in eine Registry veröffentlichen.
+7. Stack deployen und anschließend `http://SERVER-IP:8080` öffnen.
 
 ## Docker Compose
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 Danach ist die Anwendung unter [http://localhost:8080](http://localhost:8080) erreichbar.
