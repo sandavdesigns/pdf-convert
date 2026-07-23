@@ -1,5 +1,7 @@
 # MSG PDF Converter
 
+[![CI](https://github.com/sandavdesigns/pdf-convert/actions/workflows/ci.yml/badge.svg)](https://github.com/sandavdesigns/pdf-convert/actions/workflows/ci.yml)
+
 Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in lesbare PDFs umwandelt. Die ursprünglichen E-Mail-Anlagen werden als echte Dateianlagen in die PDF eingebettet.
 
 ## Funktionen
@@ -97,4 +99,3 @@ pytest
 ## Lizenz
 
 MIT
-
