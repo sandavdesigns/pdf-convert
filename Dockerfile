@@ -1,5 +1,9 @@
 FROM python:3.13-slim-bookworm
 
+LABEL org.opencontainers.image.source="https://github.com/sandavdesigns/pdf-convert" \
+      org.opencontainers.image.description="Self-hosted Outlook MSG to PDF converter" \
+      org.opencontainers.image.licenses="MIT"
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
