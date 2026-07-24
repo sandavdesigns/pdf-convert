@@ -320,8 +320,8 @@ def embed_attachments(pdf_bytes: bytes, mail: MailData, original_msg: bytes | No
             pdf.Root.PageMode = Name.UseAttachments
             with pdf.open_metadata(set_pikepdf_as_editor=False) as metadata:
                 metadata["dc:title"] = mail.subject
-                metadata["dc:creator"] = [mail.sender] if mail.sender else ["MSG PDF Converter"]
-                metadata["pdf:Producer"] = "MSG PDF Converter"
+                metadata["dc:creator"] = [mail.sender] if mail.sender else ["MSG to PDF Converter"]
+                metadata["pdf:Producer"] = "MSG to PDF Converter"
             pdf.save(output)
     except (pikepdf.PdfError, ValueError, TypeError) as exc:
         raise ConversionError("Die Anlagen konnten nicht in die PDF eingebettet werden.") from exc
