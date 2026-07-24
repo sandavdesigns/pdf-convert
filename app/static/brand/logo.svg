@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 96" role="img" aria-labelledby="title description">
-  <title id="title">MSG PDF Converter</title>
-  <desc id="description">Ein Dokument mit Büroklammer neben dem Schriftzug MSG PDF Converter.</desc>
+  <title id="title">MSG to PDF Converter</title>
+  <desc id="description">Ein Dokument mit Büroklammer neben dem Schriftzug MSG to PDF Converter.</desc>
   <defs>
     <linearGradient id="blue" x1="12" y1="8" x2="82" y2="90" gradientUnits="userSpaceOnUse">
       <stop stop-color="#2B7CF0"/>
@@ -15,6 +15,6 @@
     <path d="m51 70 13-13a8 8 0 0 1 11.3 11.3L62 81.6a11 11 0 0 1-15.6-15.6L59 53.4"
           fill="none" stroke="#FFB72B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-  <text x="112" y="42" fill="#14213D" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="31" font-weight="760" letter-spacing="-1">MSG PDF</text>
+  <text x="112" y="42" fill="#14213D" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="31" font-weight="760" letter-spacing="-1">MSG to PDF</text>
   <text x="113" y="69" fill="#1769E0" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="16" font-weight="750" letter-spacing="4.5">CONVERTER</text>
 </svg>

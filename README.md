@@ -1,5 +1,5 @@
 <p>
-  <img src="app/static/brand/logo.svg" alt="MSG PDF Converter" width="360">
+  <img src="app/static/brand/logo.svg" alt="MSG to PDF Converter" width="360">
 </p>
 
 [![CI](https://github.com/sandavdesigns/pdf-convert/actions/workflows/ci.yml/badge.svg)](https://github.com/sandavdesigns/pdf-convert/actions/workflows/ci.yml)
