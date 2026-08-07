@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#1769e0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f2f5f3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#101814" media="(prefers-color-scheme: dark)">
   <title>MSG to PDF Converter</title>
   <link rel="icon" href="{{ url_for('static', filename='brand/favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -16,13 +17,13 @@
         <img class="brand-mark" src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="">
         <span>MSG to PDF Converter</span>
       </div>
-      <p class="kicker">Lokal. Vertraulich. Vollständig.</p>
-      <h1 id="page-title">Aus Outlook-Mails werden vollständige PDFs.</h1>
-      <p class="lead">Die E-Mail wird zur lesbaren PDF. Ihre Originalanlagen bleiben als echte Dateianlagen in der PDF erhalten.</p>
+      <p class="kicker">Interne Dokumentenverarbeitung</p>
+      <h1 id="page-title">MSG-Dateien in PDF umwandeln</h1>
+      <p class="lead">Outlook-Nachrichten werden als lesbare PDF ausgegeben. Originalanlagen bleiben als eingebettete Dateien erhalten.</p>
       <ul class="features">
-        <li><span>01</span> Keine Cloud-Übertragung</li>
-        <li><span>02</span> Mehrere MSG-Dateien auf einmal</li>
-        <li><span>03</span> Anlagen unverändert eingebettet</li>
+        <li><span>01</span> Verarbeitung vollständig im lokalen System</li>
+        <li><span>02</span> Einzel- und Stapelkonvertierung</li>
+        <li><span>03</span> Originalanlagen bleiben unverändert</li>
       </ul>
     </section>
 

@@ -2,11 +2,11 @@
   <title id="title">MSG to PDF Converter</title>
   <defs>
     <linearGradient id="blue" x1="12" y1="8" x2="82" y2="90" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2B7CF0"/>
-      <stop offset="1" stop-color="#0E4FAE"/>
+      <stop stop-color="#159552"/>
+      <stop offset="1" stop-color="#075C2D"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-15%" width="140%" height="145%">
-      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0B397D" flood-opacity=".24"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#073C20" flood-opacity=".24"/>
     </filter>
   </defs>
   <rect x="4" y="4" width="88" height="88" rx="25" fill="url(#blue)"/>
@@ -14,7 +14,7 @@
         fill="#fff" filter="url(#shadow)"/>
   <path d="M55 19v11a5 5 0 0 0 5 5h10" fill="#DCEAFF"/>
   <path d="M55 19v11a5 5 0 0 0 5 5h10" fill="none" stroke="#B7D3FA" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M33 44h23M33 52h23" fill="none" stroke="#1769E0" stroke-width="4" stroke-linecap="round"/>
+  <path d="M33 44h23M33 52h23" fill="none" stroke="#087A3E" stroke-width="4" stroke-linecap="round"/>
   <path d="M53.5 69.5 65 58a7.8 7.8 0 0 1 11 11L62.8 82.2a11 11 0 0 1-15.6-15.6L60 53.8"
-        fill="none" stroke="#FFB72B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        fill="none" stroke="#E0B43D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

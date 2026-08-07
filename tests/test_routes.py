@@ -13,6 +13,8 @@ def test_index_and_health():
     response = test_client.get("/")
     assert response.status_code == 200
     assert b"MSG to PDF Converter" in response.data
+    assert b'name="color-scheme" content="light dark"' in response.data
+    assert b'prefers-color-scheme: dark' in response.data
     assert b"brand/logo-mark.svg" in response.data
     assert b"brand/favicon.svg" in response.data
     assert test_client.get("/static/brand/logo-mark.svg").status_code == 200
