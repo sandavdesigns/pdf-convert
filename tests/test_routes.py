@@ -14,9 +14,12 @@ def test_index_and_health():
     assert response.status_code == 200
     assert b"MSG to PDF Converter" in response.data
     assert b'name="color-scheme" content="light dark"' in response.data
-    assert b'prefers-color-scheme: dark' in response.data
+    assert b'data-theme-choice="light"' in response.data
+    assert b'data-theme-choice="dark"' in response.data
+    assert b'data-theme-choice="auto"' in response.data
     assert b"brand/logo-mark.svg" in response.data
     assert b"brand/favicon.svg" in response.data
+    assert test_client.get("/static/theme.js").status_code == 200
     assert test_client.get("/static/brand/logo-mark.svg").status_code == 200
     assert test_client.get("/static/brand/favicon.svg").status_code == 200
     assert "default-src 'self'" in response.headers["Content-Security-Policy"]
