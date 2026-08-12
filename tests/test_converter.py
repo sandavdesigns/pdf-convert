@@ -16,6 +16,7 @@ from app.converter import (
     safe_filename,
     sanitize_email_html,
     unique_filename,
+    _extract_attachments,
 )
 
 
@@ -83,6 +84,46 @@ def test_document_contains_visible_attachment_list():
     assert "Anlagen in dieser PDF" in document
 
 
+def test_extracts_embedded_outlook_message(tmp_path):
+    class EmbeddedMessage:
+        def export(self, target, allowBadEmbed=False):
+            assert allowBadEmbed is True
+            target.write(b"embedded-msg-data")
+
+    class EmbeddedAttachment:
+        name = "Weitergeleitete Nachricht.msg"
+        mimetype = "application/vnd.ms-outlook"
+        cid = None
+        data = EmbeddedMessage()
+
+    message = type("Message", (), {"attachments": [EmbeddedAttachment()]})()
+    attachments = _extract_attachments(message, tmp_path)
+
+    assert len(attachments) == 1
+    assert attachments[0].name == "Weitergeleitete Nachricht.msg"
+    assert attachments[0].data == b"embedded-msg-data"
+
+
+def test_preserves_cloud_attachment_as_url_file(tmp_path):
+    class CloudAttachment:
+        name = None
+        longFilename = None
+        shortFilename = None
+        displayName = None
+        url = "https://sharepoint.example.org/files/Netzplan.pdf?download=1"
+
+        @property
+        def data(self):
+            raise NotImplementedError
+
+    message = type("Message", (), {"attachments": [CloudAttachment()]})()
+    attachments = _extract_attachments(message, tmp_path)
+
+    assert len(attachments) == 1
+    assert attachments[0].name == "Netzplan.pdf.url"
+    assert b"https://sharepoint.example.org/files/Netzplan.pdf?download=1" in attachments[0].data
+
+
 def test_convert_many_rejects_invalid_msg():
     with pytest.raises(ConversionError, match="keine gültige"):
         convert_many([("fake.msg", b"invalid")])
@@ -90,12 +131,13 @@ def test_convert_many_rejects_invalid_msg():
 
 def test_convert_many_wraps_multiple_results(monkeypatch):
     monkeypatch.setattr("app.converter.convert_msg_bytes", lambda data, name, include: b"%PDF-" + data)
-    payload, name, mime = convert_many(
+    monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 0)
+    payload, name, mime, attachment_count = convert_many(
         [("eins.msg", b"one"), ("zwei.msg", b"two")],
         include_original=False,
     )
     assert name == "konvertierte-mails.zip"
     assert mime == "application/zip"
+    assert attachment_count == 0
     with zipfile.ZipFile(io.BytesIO(payload)) as archive:
         assert archive.namelist() == ["eins.pdf", "zwei.pdf"]
-

@@ -89,6 +89,21 @@ def _attachment_bytes(raw_attachment, name: str, temp_dir: Path) -> bytes:
         return data
     if isinstance(data, bytearray):
         return bytes(data)
+    if isinstance(data, memoryview):
+        return data.tobytes()
+
+    # Embedded Outlook messages expose an MSG object instead of raw bytes.
+    # Export it directly and allow the parser to repair malformed embedded
+    # storage trees produced by some Outlook versions.
+    if data is not None and hasattr(data, "export"):
+        exported = io.BytesIO()
+        try:
+            data.export(exported, allowBadEmbed=True)
+        except TypeError:
+            data.export(exported)
+        except Exception as exc:
+            raise ConversionError(f'Anlage "{name}" konnte nicht gelesen werden.') from exc
+        return exported.getvalue()
 
     try:
         result = raw_attachment.save(
@@ -117,14 +132,61 @@ def _attachment_bytes(raw_attachment, name: str, temp_dir: Path) -> bytes:
     raise ConversionError(f'Anlage "{name}" konnte nicht gespeichert werden.')
 
 
+def _attachment_name(raw_attachment, index: int) -> str:
+    for attribute in ("name", "longFilename", "shortFilename", "displayName"):
+        try:
+            value = getattr(raw_attachment, attribute, None)
+        except (AttributeError, NotImplementedError):
+            value = None
+        if value:
+            return str(value)
+
+    try:
+        value = raw_attachment.getFilename()
+    except (AttributeError, NotImplementedError):
+        value = None
+    return str(value or f"anlage-{index}")
+
+
+def _web_attachment(raw_attachment, index: int) -> Attachment | None:
+    """Preserve Outlook cloud attachments as Internet shortcuts.
+
+    Web reference attachments do not contain the remote file bytes in the MSG,
+    so downloading them server-side would require the user's Microsoft login.
+    Keeping the URL is the only complete, local and credential-free option.
+    """
+    try:
+        url = getattr(raw_attachment, "url", None)
+    except (AttributeError, NotImplementedError):
+        url = None
+    if not url:
+        return None
+
+    path_name = Path(str(url).split("?", 1)[0]).name
+    base_name = safe_filename(path_name, f"cloud-anlage-{index}")
+    name = f"{base_name}.url" if not base_name.lower().endswith(".url") else base_name
+    shortcut = f"[InternetShortcut]\r\nURL={url}\r\n".encode("utf-8")
+    return Attachment(name, shortcut, "application/internet-shortcut")
+
+
 def _extract_attachments(message, temp_dir: Path) -> tuple[Attachment, ...]:
     attachments: list[Attachment] = []
     used: set[str] = set()
     temp_dir.mkdir(parents=True, exist_ok=True)
 
     for index, raw in enumerate(message.attachments, start=1):
-        original_name = getattr(raw, "name", None) or getattr(raw, "longFilename", None)
+        web_attachment = _web_attachment(raw, index)
+        if web_attachment is not None:
+            name = unique_filename(web_attachment.name, used)
+            attachments.append(
+                Attachment(name, web_attachment.data, web_attachment.mime_type, web_attachment.content_id)
+            )
+            continue
+
+        original_name = _attachment_name(raw, index)
         name = unique_filename(safe_filename(original_name, f"anlage-{index}"), used)
+        if hasattr(getattr(raw, "data", None), "export") and not Path(name).suffix:
+            name = unique_filename(f"{name}.msg", used)
         data = _attachment_bytes(raw, name, temp_dir)
         mime_type = (
             getattr(raw, "mimetype", None)
@@ -346,18 +408,32 @@ def convert_msg_bytes(data: bytes, original_name: str, include_original: bool = 
         )
 
 
-def convert_many(files: list[tuple[str, bytes]], include_original: bool = True) -> tuple[bytes, str, str]:
+def _mail_attachment_count(pdf_bytes: bytes, original_name: str, include_original: bool) -> int:
+    with Pdf.open(io.BytesIO(pdf_bytes)) as pdf:
+        count = len(pdf.attachments)
+        original_key = safe_filename(original_name, "original.msg")
+        if include_original and original_key in pdf.attachments:
+            count -= 1
+        return max(count, 0)
+
+
+def convert_many(
+    files: list[tuple[str, bytes]], include_original: bool = True
+) -> tuple[bytes, str, str, int]:
     converted: list[tuple[str, bytes]] = []
+    attachment_count = 0
     used: set[str] = set()
     for name, data in files:
         output_name = unique_filename(f"{safe_filename(name, 'nachricht.msg').rsplit('.', 1)[0]}.pdf", used)
-        converted.append((output_name, convert_msg_bytes(data, name, include_original)))
+        pdf_bytes = convert_msg_bytes(data, name, include_original)
+        attachment_count += _mail_attachment_count(pdf_bytes, name, include_original)
+        converted.append((output_name, pdf_bytes))
 
     if len(converted) == 1:
-        return converted[0][1], converted[0][0], "application/pdf"
+        return converted[0][1], converted[0][0], "application/pdf", attachment_count
 
     archive = io.BytesIO()
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
         for name, pdf_bytes in converted:
             bundle.writestr(name, pdf_bytes)
-    return archive.getvalue(), "konvertierte-mails.zip", "application/zip"
+    return archive.getvalue(), "konvertierte-mails.zip", "application/zip", attachment_count

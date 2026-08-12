@@ -56,7 +56,7 @@ def test_convert_reports_invalid_msg():
 def test_convert_returns_generated_pdf(monkeypatch):
     monkeypatch.setattr(
         "app.routes.convert_many",
-        lambda files, include_original: (b"%PDF-test", "mail.pdf", "application/pdf"),
+        lambda files, include_original: (b"%PDF-test", "mail.pdf", "application/pdf", 2),
     )
     response = client().post(
         "/convert",
@@ -70,3 +70,4 @@ def test_convert_returns_generated_pdf(monkeypatch):
     assert response.data == b"%PDF-test"
     assert response.mimetype == "application/pdf"
     assert "mail.pdf" in response.headers["Content-Disposition"]
+    assert response.headers["X-Mail-Attachment-Count"] == "2"

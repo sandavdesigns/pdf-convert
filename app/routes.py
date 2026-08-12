@@ -34,17 +34,19 @@ def convert():
     files = [(item.filename, item.read()) for item in uploads]
     include_original = request.form.get("include_original") == "on"
     try:
-        output, name, mime_type = convert_many(files, include_original)
+        output, name, mime_type, attachment_count = convert_many(files, include_original)
     except ConversionError as exc:
         return jsonify(error=str(exc)), 422
 
-    return send_file(
+    response = send_file(
         io.BytesIO(output),
         mimetype=mime_type,
         as_attachment=True,
         download_name=name,
         max_age=0,
     )
+    response.headers["X-Mail-Attachment-Count"] = str(attachment_count)
+    return response
 
 
 @web.app_errorhandler(RequestEntityTooLarge)
@@ -56,4 +58,3 @@ def file_too_large(_error):
 @web.app_errorhandler(500)
 def internal_error(_error):
     return jsonify(error="Die Konvertierung ist unerwartet fehlgeschlagen."), 500
-

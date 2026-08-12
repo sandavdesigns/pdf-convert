@@ -426,6 +426,12 @@ summary:focus-visible,
   border: 1px solid color-mix(in srgb, var(--danger) 22%, transparent);
 }
 
+.success {
+  color: var(--primary-text);
+  background: var(--primary-soft);
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
 .progress {
   color: var(--info);
   background: var(--info-soft);

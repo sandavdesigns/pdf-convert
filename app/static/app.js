@@ -3,6 +3,7 @@ const input = document.getElementById("files");
 const dropzone = document.getElementById("dropzone");
 const list = document.getElementById("file-list");
 const error = document.getElementById("error");
+const success = document.getElementById("success");
 const progress = document.getElementById("progress");
 const button = document.getElementById("submit-button");
 
@@ -50,6 +51,7 @@ dropzone.addEventListener("drop", (event) => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   error.hidden = true;
+  success.hidden = true;
   if (!input.files.length) {
     error.textContent = "Bitte mindestens eine MSG-Datei auswählen.";
     error.hidden = false;
@@ -66,6 +68,7 @@ form.addEventListener("submit", async (event) => {
     }
 
     const blob = await response.blob();
+    const attachmentCount = Number.parseInt(response.headers.get("X-Mail-Attachment-Count") || "0", 10);
     const disposition = response.headers.get("Content-Disposition") || "";
     const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i);
     const plain = disposition.match(/filename="?([^";]+)"?/i);
@@ -78,6 +81,10 @@ form.addEventListener("submit", async (event) => {
     download.click();
     download.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    success.textContent = attachmentCount === 1
+      ? "PDF erstellt: 1 Mail-Anlage wurde eingebettet."
+      : `PDF erstellt: ${attachmentCount} Mail-Anlagen wurden eingebettet.`;
+    success.hidden = false;
   } catch (exception) {
     error.textContent = exception.message;
     error.hidden = false;
@@ -86,4 +93,3 @@ form.addEventListener("submit", async (event) => {
     button.disabled = false;
   }
 });
-

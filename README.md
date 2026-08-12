@@ -11,6 +11,8 @@ Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in le
 - Eine oder mehrere `.msg`-Dateien per Browser hochladen
 - Mailkopf und formatierter Nachrichtentext als A4-PDF
 - Originalanlagen unverändert in der PDF eingebettet
+- Eingebettete Outlook-Nachrichten werden als `.msg` übernommen
+- Microsoft-365-/SharePoint-Webanlagen bleiben als `.url`-Verknüpfung erhalten, wenn die MSG selbst keine Dateibytes enthält
 - Optionale Einbettung der ursprünglichen `.msg`
 - Mehrfachkonvertierung als ZIP-Download
 - Keine dauerhafte Speicherung und keine Cloud-Dienste
