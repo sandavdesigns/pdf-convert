@@ -5,6 +5,7 @@ import io
 import mimetypes
 import re
 import tempfile
+import urllib.parse
 import zipfile
 from dataclasses import dataclass
 from datetime import datetime
@@ -22,6 +23,7 @@ OLE_HEADER = bytes.fromhex("D0CF11E0A1B11AE1")
 BLOCKED_TAGS = ("script", "iframe", "object", "embed", "form", "input", "button", "base")
 REMOTE_URL_RE = re.compile(r"^(?:https?|ftp|file):", re.IGNORECASE)
 CSS_URL_RE = re.compile(r"(?:@import\s+[^;]+;?|url\s*\([^)]*\))", re.IGNORECASE)
+CID_URL_RE = re.compile(r"cid:([^\s\"'<>\)]+)", re.IGNORECASE)
 
 
 class ConversionError(Exception):
@@ -169,12 +171,44 @@ def _web_attachment(raw_attachment, index: int) -> Attachment | None:
     return Attachment(name, shortcut, "application/internet-shortcut")
 
 
-def _extract_attachments(message, temp_dir: Path) -> tuple[Attachment, ...]:
+def _normalize_content_id(value: str | None) -> str:
+    return urllib.parse.unquote(str(value or "")).strip().strip("<>").casefold()
+
+
+def _inline_content_ids(raw_html: str) -> set[str]:
+    return {
+        normalized
+        for value in CID_URL_RE.findall(raw_html)
+        if (normalized := _normalize_content_id(value))
+    }
+
+
+def _is_inline_attachment(raw_attachment, inline_content_ids: set[str]) -> bool:
+    try:
+        if bool(getattr(raw_attachment, "hidden", False)):
+            return True
+    except (AttributeError, NotImplementedError):
+        pass
+
+    try:
+        content_id = getattr(raw_attachment, "cid", None) or getattr(raw_attachment, "contentId", None)
+    except (AttributeError, NotImplementedError):
+        content_id = None
+    return bool(content_id and _normalize_content_id(content_id) in inline_content_ids)
+
+
+def _extract_attachments(
+    message, temp_dir: Path, inline_content_ids: set[str] | None = None
+) -> tuple[Attachment, ...]:
     attachments: list[Attachment] = []
     used: set[str] = set()
+    inline_content_ids = inline_content_ids or set()
     temp_dir.mkdir(parents=True, exist_ok=True)
 
     for index, raw in enumerate(message.attachments, start=1):
+        if _is_inline_attachment(raw, inline_content_ids):
+            continue
+
         web_attachment = _web_attachment(raw, index)
         if web_attachment is not None:
             name = unique_filename(web_attachment.name, used)
@@ -244,9 +278,14 @@ def sanitize_email_html(raw_html: str) -> str:
 def read_msg(source: Path, temp_dir: Path) -> MailData:
     try:
         with extract_msg.openMsg(source) as message:
-            attachments = _extract_attachments(message, temp_dir)
+            source_html = _decode_html(getattr(message, "htmlBody", None))
+            attachments = _extract_attachments(
+                message,
+                temp_dir,
+                _inline_content_ids(source_html),
+            )
             prepared_html = getattr(message, "htmlBodyPrepared", None)
-            body_html = _decode_html(prepared_html or getattr(message, "htmlBody", None))
+            body_html = _decode_html(prepared_html) or source_html
             if not body_html:
                 plain_body = getattr(message, "body", None) or "(Kein Nachrichtentext vorhanden)"
                 body_html = f"<pre>{html.escape(str(plain_body))}</pre>"

@@ -17,6 +17,7 @@ from app.converter import (
     sanitize_email_html,
     unique_filename,
     _extract_attachments,
+    _inline_content_ids,
 )
 
 
@@ -122,6 +123,54 @@ def test_preserves_cloud_attachment_as_url_file(tmp_path):
     assert len(attachments) == 1
     assert attachments[0].name == "Netzplan.pdf.url"
     assert b"https://sharepoint.example.org/files/Netzplan.pdf?download=1" in attachments[0].data
+
+
+def test_excludes_inline_signature_image_but_keeps_real_image_attachment(tmp_path):
+    class ImageAttachment:
+        mimetype = "image/png"
+        hidden = False
+
+        def __init__(self, name, cid, data):
+            self.name = name
+            self.cid = cid
+            self.contentId = cid
+            self.data = data
+
+    inline_logo = ImageAttachment("logo.png", "<signature-logo@example>", b"inline-logo")
+    real_attachment = ImageAttachment("Lageplan.png", None, b"real-attachment")
+    message = type("Message", (), {"attachments": [inline_logo, real_attachment]})()
+
+    attachments = _extract_attachments(
+        message,
+        tmp_path,
+        {"signature-logo@example"},
+    )
+
+    assert [attachment.name for attachment in attachments] == ["Lageplan.png"]
+    assert attachments[0].data == b"real-attachment"
+
+
+def test_finds_and_normalizes_inline_content_ids():
+    body_html = '<img src="cid:%3CSignature-Logo%40Example%3E">'
+
+    assert _inline_content_ids(body_html) == {"signature-logo@example"}
+
+
+def test_excludes_hidden_outlook_resource(tmp_path):
+    hidden_attachment = type(
+        "HiddenAttachment",
+        (),
+        {
+            "name": "image001.png",
+            "cid": None,
+            "hidden": True,
+            "data": b"hidden-resource",
+            "mimetype": "image/png",
+        },
+    )()
+    message = type("Message", (), {"attachments": [hidden_attachment]})()
+
+    assert _extract_attachments(message, tmp_path) == ()
 
 
 def test_convert_many_rejects_invalid_msg():
