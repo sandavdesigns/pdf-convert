@@ -1,5 +1,6 @@
 import io
 import zipfile
+from datetime import datetime
 
 import pikepdf
 import pytest
@@ -8,6 +9,7 @@ from app.converter import (
     Attachment,
     ConversionError,
     MailData,
+    archive_output_filename,
     build_document_html,
     convert_many,
     embed_attachments,
@@ -76,6 +78,10 @@ def test_mail_output_filename_has_safe_fallbacks():
     )
 
     assert mail_output_filename(mail) == "ohne-datum technik ---------.pdf"
+
+
+def test_archive_output_filename_uses_date_and_six_digit_random_number():
+    assert archive_output_filename(datetime(2026, 2, 5), 154782) == "2026-02-05-154782.zip"
 
 
 def test_email_html_removes_active_and_remote_content():
@@ -238,11 +244,12 @@ def test_convert_many_wraps_multiple_results(monkeypatch):
         lambda data, name, include: (b"%PDF-" + data, sample_mail()),
     )
     monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 0)
+    monkeypatch.setattr("app.converter.archive_output_filename", lambda: "2026-02-05-154782.zip")
     payload, name, mime, attachment_count = convert_many(
         [("eins.msg", b"one"), ("zwei.msg", b"two")],
         include_original=False,
     )
-    assert name == "konvertierte-mails.zip"
+    assert name == "2026-02-05-154782.zip"
     assert mime == "application/zip"
     assert attachment_count == 0
     with zipfile.ZipFile(io.BytesIO(payload)) as archive:

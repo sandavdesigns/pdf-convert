@@ -4,6 +4,7 @@ import html
 import io
 import mimetypes
 import re
+import secrets
 import tempfile
 import urllib.parse
 import zipfile
@@ -11,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable
+from zoneinfo import ZoneInfo
 
 import extract_msg
 import pikepdf
@@ -95,6 +97,16 @@ def mail_output_filename(mail: MailData) -> str:
     subject = subject[:30].rstrip(" .") or "Ohne Betreff"
     filename = f"{_filename_date(mail.date)} {_filename_sender(mail.sender)} {subject}.pdf"
     return safe_filename(filename, "nachricht.pdf")
+
+
+def archive_output_filename(
+    now: datetime | None = None, random_number: int | None = None
+) -> str:
+    timestamp = now or datetime.now(ZoneInfo("Europe/Berlin"))
+    suffix = random_number if random_number is not None else secrets.randbelow(900_000) + 100_000
+    if not 100_000 <= suffix <= 999_999:
+        raise ValueError("Die Zufallszahl muss sechsstellig sein.")
+    return f"{timestamp:%Y-%m-%d}-{suffix}.zip"
 
 
 def unique_filename(name: str, used: set[str]) -> str:
@@ -521,4 +533,4 @@ def convert_many(
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
         for name, pdf_bytes, _ in converted:
             bundle.writestr(name, pdf_bytes)
-    return archive.getvalue(), "konvertierte-mails.zip", "application/zip", attachment_count
+    return archive.getvalue(), archive_output_filename(), "application/zip", attachment_count
