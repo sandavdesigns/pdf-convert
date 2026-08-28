@@ -24,6 +24,10 @@ BLOCKED_TAGS = ("script", "iframe", "object", "embed", "form", "input", "button"
 REMOTE_URL_RE = re.compile(r"^(?:https?|ftp|file):", re.IGNORECASE)
 CSS_URL_RE = re.compile(r"(?:@import\s+[^;]+;?|url\s*\([^)]*\))", re.IGNORECASE)
 CID_URL_RE = re.compile(r"cid:([^\s\"'<>\)]+)", re.IGNORECASE)
+WINDOWS_INVALID_FILENAME_RE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+GERMAN_FILENAME_TRANSLATION = str.maketrans(
+    {"Ä": "Ae", "Ö": "Oe", "Ü": "Ue", "ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"}
+)
 
 
 class ConversionError(Exception):
@@ -58,6 +62,39 @@ def safe_filename(value: str | None, fallback: str) -> str:
     name = "".join(character for character in name if character >= " " and character not in '<>:"/\\|?*')
     name = name.strip(" .")
     return name[:180] or fallback
+
+
+def _filename_date(value: str) -> str:
+    german_date = re.search(r"\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b", value)
+    if german_date:
+        day, month, year = german_date.groups()
+        return f"{year}-{int(month):02d}-{int(day):02d}"
+
+    iso_date = re.search(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b", value)
+    if iso_date:
+        year, month, day = iso_date.groups()
+        return f"{year}-{int(month):02d}-{int(day):02d}"
+    return "ohne-datum"
+
+
+def _filename_sender(value: str) -> str:
+    display_name = re.sub(r"\s*<[^>]*>\s*$", "", value).strip().strip("'\"")
+    if not display_name:
+        address = re.search(r"<([^>]+)>", value)
+        display_name = address.group(1).split("@", 1)[0] if address else "Unbekannt"
+    display_name = display_name.translate(GERMAN_FILENAME_TRANSLATION)
+    display_name = WINDOWS_INVALID_FILENAME_RE.sub(".", display_name)
+    display_name = re.sub(r"[^\w.-]+", ".", display_name, flags=re.UNICODE)
+    display_name = re.sub(r"\.{2,}", ".", display_name).strip(" .")
+    return display_name or "Unbekannt"
+
+
+def mail_output_filename(mail: MailData) -> str:
+    subject = WINDOWS_INVALID_FILENAME_RE.sub("-", mail.subject)
+    subject = re.sub(r"\s+", " ", subject).strip(" .")
+    subject = subject[:30].rstrip(" .") or "Ohne Betreff"
+    filename = f"{_filename_date(mail.date)} {_filename_sender(mail.sender)} {subject}.pdf"
+    return safe_filename(filename, "nachricht.pdf")
 
 
 def unique_filename(name: str, used: set[str]) -> str:
@@ -429,7 +466,9 @@ def embed_attachments(pdf_bytes: bytes, mail: MailData, original_msg: bytes | No
     return output.getvalue()
 
 
-def convert_msg_bytes(data: bytes, original_name: str, include_original: bool = True) -> bytes:
+def _convert_msg_with_metadata(
+    data: bytes, original_name: str, include_original: bool = True
+) -> tuple[bytes, MailData]:
     if not is_msg_file(data):
         raise ConversionError("Die hochgeladene Datei ist keine gültige Outlook-MSG-Datei.")
 
@@ -439,12 +478,18 @@ def convert_msg_bytes(data: bytes, original_name: str, include_original: bool = 
         msg_path.write_bytes(data)
         mail = read_msg(msg_path, temp_dir / "attachments")
         base_pdf = render_pdf(mail)
-        return embed_attachments(
+        pdf_bytes = embed_attachments(
             base_pdf,
             mail,
             data if include_original else None,
             original_name,
         )
+        return pdf_bytes, mail
+
+
+def convert_msg_bytes(data: bytes, original_name: str, include_original: bool = True) -> bytes:
+    pdf_bytes, _ = _convert_msg_with_metadata(data, original_name, include_original)
+    return pdf_bytes
 
 
 def _mail_attachment_count(pdf_bytes: bytes, original_name: str, include_original: bool) -> int:
@@ -459,20 +504,21 @@ def _mail_attachment_count(pdf_bytes: bytes, original_name: str, include_origina
 def convert_many(
     files: list[tuple[str, bytes]], include_original: bool = True
 ) -> tuple[bytes, str, str, int]:
-    converted: list[tuple[str, bytes]] = []
+    converted: list[tuple[str, bytes, MailData]] = []
     attachment_count = 0
     used: set[str] = set()
     for name, data in files:
         output_name = unique_filename(f"{safe_filename(name, 'nachricht.msg').rsplit('.', 1)[0]}.pdf", used)
-        pdf_bytes = convert_msg_bytes(data, name, include_original)
+        pdf_bytes, mail = _convert_msg_with_metadata(data, name, include_original)
         attachment_count += _mail_attachment_count(pdf_bytes, name, include_original)
-        converted.append((output_name, pdf_bytes))
+        converted.append((output_name, pdf_bytes, mail))
 
     if len(converted) == 1:
-        return converted[0][1], converted[0][0], "application/pdf", attachment_count
+        _, pdf_bytes, mail = converted[0]
+        return pdf_bytes, mail_output_filename(mail), "application/pdf", attachment_count
 
     archive = io.BytesIO()
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
-        for name, pdf_bytes in converted:
+        for name, pdf_bytes, _ in converted:
             bundle.writestr(name, pdf_bytes)
     return archive.getvalue(), "konvertierte-mails.zip", "application/zip", attachment_count

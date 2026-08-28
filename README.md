@@ -10,6 +10,7 @@ Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in le
 
 - Eine oder mehrere `.msg`-Dateien per Browser hochladen
 - Mailkopf und formatierter Nachrichtentext als A4-PDF
+- Einzelne PDFs werden als `YYYY-MM-DD Absender Betreff.pdf` benannt; der Betreff ist auf 30 Zeichen begrenzt
 - Originalanlagen unverändert in der PDF eingebettet
 - Inline-Bilder aus Mailtext und Signaturen werden dargestellt, aber nicht zusätzlich als PDF-Anlage geführt
 - Eingebettete Outlook-Nachrichten werden als `.msg` übernommen

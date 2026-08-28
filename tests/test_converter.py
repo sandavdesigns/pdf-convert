@@ -12,6 +12,7 @@ from app.converter import (
     convert_many,
     embed_attachments,
     is_msg_file,
+    mail_output_filename,
     render_pdf,
     safe_filename,
     sanitize_email_html,
@@ -46,6 +47,35 @@ def test_safe_and_unique_filenames():
     used = set()
     assert unique_filename("anlage.pdf", used) == "anlage.pdf"
     assert unique_filename("Anlage.pdf", used) == "Anlage (2).pdf"
+
+
+def test_mail_output_filename_uses_date_sender_and_shortened_subject():
+    mail = MailData(
+        subject='Meeting: Netzgebiet West / Abstimmung mit Projektteam',
+        sender='Müller, David <david.mueller@example.org>',
+        recipients="",
+        cc="",
+        date="05.02.2026, 09:15 CET",
+        body_html="",
+        attachments=(),
+    )
+
+    assert mail_output_filename(mail) == "2026-02-05 Mueller.David Meeting- Netzgebiet West - Abs.pdf"
+    assert len("Meeting- Netzgebiet West - Abs") == 30
+
+
+def test_mail_output_filename_has_safe_fallbacks():
+    mail = MailData(
+        subject='<>:"/\\|?*',
+        sender="<technik@example.org>",
+        recipients="",
+        cc="",
+        date="",
+        body_html="",
+        attachments=(),
+    )
+
+    assert mail_output_filename(mail) == "ohne-datum technik ---------.pdf"
 
 
 def test_email_html_removes_active_and_remote_content():
@@ -178,8 +208,35 @@ def test_convert_many_rejects_invalid_msg():
         convert_many([("fake.msg", b"invalid")])
 
 
+def test_convert_many_names_single_pdf_from_mail_metadata(monkeypatch):
+    mail = MailData(
+        subject="Meeting vom Montag",
+        sender="Müller, David <david.mueller@example.org>",
+        recipients="",
+        cc="",
+        date="05.02.2026, 09:15 CET",
+        body_html="",
+        attachments=(),
+    )
+    monkeypatch.setattr(
+        "app.converter._convert_msg_with_metadata",
+        lambda data, name, include: (b"%PDF-test", mail),
+    )
+    monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 0)
+
+    payload, name, mime, attachment_count = convert_many([("outlook.msg", b"msg")])
+
+    assert payload == b"%PDF-test"
+    assert name == "2026-02-05 Mueller.David Meeting vom Montag.pdf"
+    assert mime == "application/pdf"
+    assert attachment_count == 0
+
+
 def test_convert_many_wraps_multiple_results(monkeypatch):
-    monkeypatch.setattr("app.converter.convert_msg_bytes", lambda data, name, include: b"%PDF-" + data)
+    monkeypatch.setattr(
+        "app.converter._convert_msg_with_metadata",
+        lambda data, name, include: (b"%PDF-" + data, sample_mail()),
+    )
     monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 0)
     payload, name, mime, attachment_count = convert_many(
         [("eins.msg", b"one"), ("zwei.msg", b"two")],
