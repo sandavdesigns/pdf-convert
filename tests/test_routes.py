@@ -60,7 +60,7 @@ def test_convert_returns_generated_pdf(monkeypatch):
     def fake_convert(files, include_original, export_attachments):
         options["include_original"] = include_original
         options["export_attachments"] = export_attachments
-        return b"%PDF-test", "mail.pdf", "application/pdf", 2
+        return b"MSGPDF-test", "einzeldateien.msgpdf", "application/vnd.msg-pdf-files", 2
 
     monkeypatch.setattr(
         "app.routes.convert_many",
@@ -76,8 +76,8 @@ def test_convert_returns_generated_pdf(monkeypatch):
         content_type="multipart/form-data",
     )
     assert response.status_code == 200
-    assert response.data == b"%PDF-test"
-    assert response.mimetype == "application/pdf"
-    assert "mail.pdf" in response.headers["Content-Disposition"]
+    assert response.data == b"MSGPDF-test"
+    assert response.mimetype == "application/vnd.msg-pdf-files"
+    assert "einzeldateien.msgpdf" in response.headers["Content-Disposition"]
     assert response.headers["X-Mail-Attachment-Count"] == "2"
     assert options == {"include_original": True, "export_attachments": True}

@@ -1,4 +1,5 @@
 import io
+import struct
 import zipfile
 from datetime import datetime
 
@@ -8,6 +9,8 @@ import pytest
 from app.converter import (
     Attachment,
     ConversionError,
+    FILE_BUNDLE_MAGIC,
+    FILE_BUNDLE_MIME,
     MailData,
     archive_output_filename,
     build_document_html,
@@ -22,6 +25,19 @@ from app.converter import (
     _extract_attachments,
     _inline_content_ids,
 )
+
+
+def unpack_file_bundle(payload):
+    stream = io.BytesIO(payload)
+    assert stream.read(8) == FILE_BUNDLE_MAGIC
+    file_count = struct.unpack(">I", stream.read(4))[0]
+    files = []
+    for _ in range(file_count):
+        name_length, file_length = struct.unpack(">IQ", stream.read(12))
+        name = stream.read(name_length).decode("utf-8")
+        files.append((name, stream.read(file_length)))
+    assert stream.read() == b""
+    return files
 
 
 def sample_mail():
@@ -238,30 +254,26 @@ def test_convert_many_names_single_pdf_from_mail_metadata(monkeypatch):
     assert attachment_count == 0
 
 
-def test_convert_many_exports_single_pdf_and_attachments_side_by_side(monkeypatch):
+def test_convert_many_exports_single_pdf_and_attachments_as_individual_files(monkeypatch):
     monkeypatch.setattr(
         "app.converter._convert_msg_with_metadata",
         lambda data, name, include: (b"%PDF-test", sample_mail()),
     )
     monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 2)
-    monkeypatch.setattr("app.converter.archive_output_filename", lambda: "2026-02-05-154782.zip")
 
     payload, name, mime, attachment_count = convert_many(
         [("outlook.msg", b"msg")],
         export_attachments=True,
     )
 
-    assert name == "2026-02-05-154782.zip"
-    assert mime == "application/zip"
+    assert name == "einzeldateien.msgpdf"
+    assert mime == FILE_BUNDLE_MIME
     assert attachment_count == 2
-    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
-        assert archive.namelist() == [
-            "2026-07-23 Absender Test & Prüfung.pdf",
-            "daten.txt",
-            "bild.png",
-        ]
-        assert archive.read("daten.txt") == b"eins,zwei,drei"
-        assert archive.read("bild.png") == b"not-a-real-png"
+    assert unpack_file_bundle(payload) == [
+        ("2026-07-23 Absender Test & Prüfung.pdf", b"%PDF-test"),
+        ("daten.txt", b"eins,zwei,drei"),
+        ("bild.png", b"not-a-real-png"),
+    ]
 
 
 def test_convert_many_wraps_multiple_results(monkeypatch):
@@ -282,25 +294,23 @@ def test_convert_many_wraps_multiple_results(monkeypatch):
         assert archive.namelist() == ["eins.pdf", "zwei.pdf"]
 
 
-def test_convert_many_groups_separate_attachments_by_mail(monkeypatch):
+def test_convert_many_prefixes_separate_attachments_by_mail(monkeypatch):
     monkeypatch.setattr(
         "app.converter._convert_msg_with_metadata",
         lambda data, name, include: (b"%PDF-" + data, sample_mail()),
     )
     monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 2)
-    monkeypatch.setattr("app.converter.archive_output_filename", lambda: "2026-02-05-154782.zip")
 
     payload, _, _, _ = convert_many(
         [("eins.msg", b"one"), ("zwei.msg", b"two")],
         export_attachments=True,
     )
 
-    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
-        assert archive.namelist() == [
-            "eins/eins.pdf",
-            "eins/daten.txt",
-            "eins/bild.png",
-            "zwei/zwei.pdf",
-            "zwei/daten.txt",
-            "zwei/bild.png",
-        ]
+    assert [name for name, _ in unpack_file_bundle(payload)] == [
+        "eins.pdf",
+        "eins - daten.txt",
+        "eins - bild.png",
+        "zwei.pdf",
+        "zwei - daten.txt",
+        "zwei - bild.png",
+    ]

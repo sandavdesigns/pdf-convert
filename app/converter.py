@@ -5,6 +5,7 @@ import io
 import mimetypes
 import re
 import secrets
+import struct
 import tempfile
 import urllib.parse
 import zipfile
@@ -22,6 +23,8 @@ from weasyprint import CSS, HTML, default_url_fetcher
 
 
 OLE_HEADER = bytes.fromhex("D0CF11E0A1B11AE1")
+FILE_BUNDLE_MAGIC = b"MSGPDF01"
+FILE_BUNDLE_MIME = "application/vnd.msg-pdf-files"
 BLOCKED_TAGS = ("script", "iframe", "object", "embed", "form", "input", "button", "base")
 REMOTE_URL_RE = re.compile(r"^(?:https?|ftp|file):", re.IGNORECASE)
 CSS_URL_RE = re.compile(r"(?:@import\s+[^;]+;?|url\s*\([^)]*\))", re.IGNORECASE)
@@ -513,22 +516,36 @@ def _mail_attachment_count(pdf_bytes: bytes, original_name: str, include_origina
         return max(count, 0)
 
 
-def _write_mail_files(
-    archive: zipfile.ZipFile,
-    prefix: str,
-    pdf_name: str,
-    pdf_bytes: bytes,
-    attachments: tuple[Attachment, ...],
-) -> None:
+def _encode_file_bundle(files: list[tuple[str, bytes]]) -> bytes:
+    output = io.BytesIO()
+    output.write(FILE_BUNDLE_MAGIC)
+    output.write(struct.pack(">I", len(files)))
+    for name, data in files:
+        encoded_name = name.encode("utf-8")
+        output.write(struct.pack(">IQ", len(encoded_name), len(data)))
+        output.write(encoded_name)
+        output.write(data)
+    return output.getvalue()
+
+
+def _separate_files(converted: list[tuple[str, bytes, MailData]]) -> list[tuple[str, bytes]]:
+    files: list[tuple[str, bytes]] = []
     used: set[str] = set()
-    safe_pdf_name = unique_filename(safe_filename(pdf_name, "nachricht.pdf"), used)
-    archive.writestr(f"{prefix}{safe_pdf_name}", pdf_bytes)
-    for index, attachment in enumerate(attachments, start=1):
-        attachment_name = unique_filename(
-            safe_filename(attachment.name, f"anlage-{index}"),
-            used,
-        )
-        archive.writestr(f"{prefix}{attachment_name}", attachment.data)
+    single_mail = len(converted) == 1
+
+    for source_pdf_name, pdf_bytes, mail in converted:
+        pdf_name = mail_output_filename(mail) if single_mail else source_pdf_name
+        files.append((unique_filename(safe_filename(pdf_name, "nachricht.pdf"), used), pdf_bytes))
+
+        source_prefix = "" if single_mail else f"{Path(source_pdf_name).stem} - "
+        for index, attachment in enumerate(mail.attachments, start=1):
+            attachment_name = safe_filename(attachment.name, f"anlage-{index}")
+            separate_name = unique_filename(
+                safe_filename(f"{source_prefix}{attachment_name}", f"anlage-{index}"),
+                used,
+            )
+            files.append((separate_name, attachment.data))
+    return files
 
 
 def convert_many(
@@ -549,22 +566,12 @@ def convert_many(
         _, pdf_bytes, mail = converted[0]
         return pdf_bytes, mail_output_filename(mail), "application/pdf", attachment_count
 
+    if export_attachments:
+        bundle = _encode_file_bundle(_separate_files(converted))
+        return bundle, "einzeldateien.msgpdf", FILE_BUNDLE_MIME, attachment_count
+
     archive = io.BytesIO()
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
-        if export_attachments and len(converted) == 1:
-            _, pdf_bytes, mail = converted[0]
-            _write_mail_files(
-                bundle,
-                "",
-                mail_output_filename(mail),
-                pdf_bytes,
-                mail.attachments,
-            )
-        elif export_attachments:
-            for name, pdf_bytes, mail in converted:
-                folder = safe_filename(Path(name).stem, "nachricht")
-                _write_mail_files(bundle, f"{folder}/", name, pdf_bytes, mail.attachments)
-        else:
-            for name, pdf_bytes, _ in converted:
-                bundle.writestr(name, pdf_bytes)
+        for name, pdf_bytes, _ in converted:
+            bundle.writestr(name, pdf_bytes)
     return archive.getvalue(), archive_output_filename(), "application/zip", attachment_count
