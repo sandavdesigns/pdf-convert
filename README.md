@@ -13,6 +13,7 @@ Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in le
 - Einzelne PDFs werden als `YYYY-MM-DD Absender Betreff.pdf` benannt; der Betreff ist auf 30 Zeichen begrenzt
 - Sammeldownloads erhalten einen eindeutigen Namen wie `2026-02-05-154782.zip`
 - Originalanlagen unverändert in der PDF eingebettet
+- Optionaler ZIP-Download mit PDF und zusätzlich separat abgelegten Originalanlagen
 - Inline-Bilder aus Mailtext und Signaturen werden dargestellt, aber nicht zusätzlich als PDF-Anlage geführt
 - Eingebettete Outlook-Nachrichten werden als `.msg` übernommen
 - Microsoft-365-/SharePoint-Webanlagen bleiben als `.url`-Verknüpfung erhalten, wenn die MSG selbst keine Dateibytes enthält
@@ -107,7 +108,8 @@ pytest
 2. Aktive und externe Inhalte werden aus dem Mail-HTML entfernt.
 3. WeasyPrint rendert Mailkopf und Nachricht als PDF.
 4. `pikepdf` bettet die Originalanlagen und optional die MSG-Datei ein.
-5. Der Browser lädt das Ergebnis direkt herunter.
+5. Auf Wunsch werden PDF und Originalanlagen zusätzlich als einzelne Dateien in einer ZIP zusammengefasst.
+6. Der Browser lädt das Ergebnis direkt herunter.
 
 ## Hinweise
 

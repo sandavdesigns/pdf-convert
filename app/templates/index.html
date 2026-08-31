@@ -75,14 +75,25 @@
 
         <div id="file-list" class="file-list" hidden></div>
 
-        <label class="option">
-          <input type="checkbox" name="include_original" checked>
-          <span class="checkmark" aria-hidden="true"></span>
-          <span>
-            <strong>Originale MSG-Datei ebenfalls einbetten</strong>
-            <small>Empfohlen für eine möglichst vollständige Archivkopie</small>
-          </span>
-        </label>
+        <div class="options">
+          <label class="option">
+            <input type="checkbox" name="include_original" checked>
+            <span class="checkmark" aria-hidden="true"></span>
+            <span>
+              <strong>Originale MSG-Datei ebenfalls einbetten</strong>
+              <small>Empfohlen für eine möglichst vollständige Archivkopie</small>
+            </span>
+          </label>
+
+          <label class="option">
+            <input type="checkbox" name="export_attachments">
+            <span class="checkmark" aria-hidden="true"></span>
+            <span>
+              <strong>Anlagen zusätzlich separat herunterladen</strong>
+              <small>Erstellt eine ZIP-Datei mit PDF und Originalanlagen als einzelnen Dateien</small>
+            </span>
+          </label>
+        </div>
 
         <div id="error" class="message error" role="alert" hidden></div>
         <div id="success" class="message success" role="status" hidden></div>

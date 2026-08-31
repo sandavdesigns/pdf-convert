@@ -17,6 +17,7 @@ def test_index_and_health():
     assert b'data-theme-choice="light"' in response.data
     assert b'data-theme-choice="dark"' in response.data
     assert b'data-theme-choice="auto"' in response.data
+    assert b'name="export_attachments"' in response.data
     assert b"brand/logo-mark.svg" in response.data
     assert b"brand/favicon.svg" in response.data
     assert test_client.get("/static/theme.js").status_code == 200
@@ -54,15 +55,23 @@ def test_convert_reports_invalid_msg():
 
 
 def test_convert_returns_generated_pdf(monkeypatch):
+    options = {}
+
+    def fake_convert(files, include_original, export_attachments):
+        options["include_original"] = include_original
+        options["export_attachments"] = export_attachments
+        return b"%PDF-test", "mail.pdf", "application/pdf", 2
+
     monkeypatch.setattr(
         "app.routes.convert_many",
-        lambda files, include_original: (b"%PDF-test", "mail.pdf", "application/pdf", 2),
+        fake_convert,
     )
     response = client().post(
         "/convert",
         data={
             "files": (io.BytesIO(b"valid-for-mock"), "mail.msg"),
             "include_original": "on",
+            "export_attachments": "on",
         },
         content_type="multipart/form-data",
     )
@@ -71,3 +80,4 @@ def test_convert_returns_generated_pdf(monkeypatch):
     assert response.mimetype == "application/pdf"
     assert "mail.pdf" in response.headers["Content-Disposition"]
     assert response.headers["X-Mail-Attachment-Count"] == "2"
+    assert options == {"include_original": True, "export_attachments": True}

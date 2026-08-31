@@ -6,6 +6,7 @@ const error = document.getElementById("error");
 const success = document.getElementById("success");
 const progress = document.getElementById("progress");
 const button = document.getElementById("submit-button");
+const exportAttachments = form.elements.export_attachments;
 
 function renderFiles() {
   const files = Array.from(input.files);
@@ -81,9 +82,15 @@ form.addEventListener("submit", async (event) => {
     download.click();
     download.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-    success.textContent = attachmentCount === 1
-      ? "PDF erstellt: 1 Mail-Anlage wurde eingebettet."
-      : `PDF erstellt: ${attachmentCount} Mail-Anlagen wurden eingebettet.`;
+    if (exportAttachments.checked) {
+      success.textContent = attachmentCount === 1
+        ? "ZIP erstellt: Die PDF und 1 Mail-Anlage wurden gemeinsam gespeichert."
+        : `ZIP erstellt: PDF-Datei(en) und ${attachmentCount} Mail-Anlagen wurden gemeinsam gespeichert.`;
+    } else {
+      success.textContent = attachmentCount === 1
+        ? "PDF erstellt: 1 Mail-Anlage wurde eingebettet."
+        : `PDF erstellt: ${attachmentCount} Mail-Anlagen wurden eingebettet.`;
+    }
     success.hidden = false;
   } catch (exception) {
     error.textContent = exception.message;

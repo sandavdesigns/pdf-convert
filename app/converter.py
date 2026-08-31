@@ -513,8 +513,28 @@ def _mail_attachment_count(pdf_bytes: bytes, original_name: str, include_origina
         return max(count, 0)
 
 
+def _write_mail_files(
+    archive: zipfile.ZipFile,
+    prefix: str,
+    pdf_name: str,
+    pdf_bytes: bytes,
+    attachments: tuple[Attachment, ...],
+) -> None:
+    used: set[str] = set()
+    safe_pdf_name = unique_filename(safe_filename(pdf_name, "nachricht.pdf"), used)
+    archive.writestr(f"{prefix}{safe_pdf_name}", pdf_bytes)
+    for index, attachment in enumerate(attachments, start=1):
+        attachment_name = unique_filename(
+            safe_filename(attachment.name, f"anlage-{index}"),
+            used,
+        )
+        archive.writestr(f"{prefix}{attachment_name}", attachment.data)
+
+
 def convert_many(
-    files: list[tuple[str, bytes]], include_original: bool = True
+    files: list[tuple[str, bytes]],
+    include_original: bool = True,
+    export_attachments: bool = False,
 ) -> tuple[bytes, str, str, int]:
     converted: list[tuple[str, bytes, MailData]] = []
     attachment_count = 0
@@ -525,12 +545,26 @@ def convert_many(
         attachment_count += _mail_attachment_count(pdf_bytes, name, include_original)
         converted.append((output_name, pdf_bytes, mail))
 
-    if len(converted) == 1:
+    if len(converted) == 1 and not export_attachments:
         _, pdf_bytes, mail = converted[0]
         return pdf_bytes, mail_output_filename(mail), "application/pdf", attachment_count
 
     archive = io.BytesIO()
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
-        for name, pdf_bytes, _ in converted:
-            bundle.writestr(name, pdf_bytes)
+        if export_attachments and len(converted) == 1:
+            _, pdf_bytes, mail = converted[0]
+            _write_mail_files(
+                bundle,
+                "",
+                mail_output_filename(mail),
+                pdf_bytes,
+                mail.attachments,
+            )
+        elif export_attachments:
+            for name, pdf_bytes, mail in converted:
+                folder = safe_filename(Path(name).stem, "nachricht")
+                _write_mail_files(bundle, f"{folder}/", name, pdf_bytes, mail.attachments)
+        else:
+            for name, pdf_bytes, _ in converted:
+                bundle.writestr(name, pdf_bytes)
     return archive.getvalue(), archive_output_filename(), "application/zip", attachment_count

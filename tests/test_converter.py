@@ -238,6 +238,32 @@ def test_convert_many_names_single_pdf_from_mail_metadata(monkeypatch):
     assert attachment_count == 0
 
 
+def test_convert_many_exports_single_pdf_and_attachments_side_by_side(monkeypatch):
+    monkeypatch.setattr(
+        "app.converter._convert_msg_with_metadata",
+        lambda data, name, include: (b"%PDF-test", sample_mail()),
+    )
+    monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 2)
+    monkeypatch.setattr("app.converter.archive_output_filename", lambda: "2026-02-05-154782.zip")
+
+    payload, name, mime, attachment_count = convert_many(
+        [("outlook.msg", b"msg")],
+        export_attachments=True,
+    )
+
+    assert name == "2026-02-05-154782.zip"
+    assert mime == "application/zip"
+    assert attachment_count == 2
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        assert archive.namelist() == [
+            "2026-07-23 Absender Test & Prüfung.pdf",
+            "daten.txt",
+            "bild.png",
+        ]
+        assert archive.read("daten.txt") == b"eins,zwei,drei"
+        assert archive.read("bild.png") == b"not-a-real-png"
+
+
 def test_convert_many_wraps_multiple_results(monkeypatch):
     monkeypatch.setattr(
         "app.converter._convert_msg_with_metadata",
@@ -254,3 +280,27 @@ def test_convert_many_wraps_multiple_results(monkeypatch):
     assert attachment_count == 0
     with zipfile.ZipFile(io.BytesIO(payload)) as archive:
         assert archive.namelist() == ["eins.pdf", "zwei.pdf"]
+
+
+def test_convert_many_groups_separate_attachments_by_mail(monkeypatch):
+    monkeypatch.setattr(
+        "app.converter._convert_msg_with_metadata",
+        lambda data, name, include: (b"%PDF-" + data, sample_mail()),
+    )
+    monkeypatch.setattr("app.converter._mail_attachment_count", lambda data, name, include: 2)
+    monkeypatch.setattr("app.converter.archive_output_filename", lambda: "2026-02-05-154782.zip")
+
+    payload, _, _, _ = convert_many(
+        [("eins.msg", b"one"), ("zwei.msg", b"two")],
+        export_attachments=True,
+    )
+
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        assert archive.namelist() == [
+            "eins/eins.pdf",
+            "eins/daten.txt",
+            "eins/bild.png",
+            "zwei/zwei.pdf",
+            "zwei/daten.txt",
+            "zwei/bild.png",
+        ]

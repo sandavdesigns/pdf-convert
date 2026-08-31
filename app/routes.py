@@ -33,8 +33,13 @@ def convert():
 
     files = [(item.filename, item.read()) for item in uploads]
     include_original = request.form.get("include_original") == "on"
+    export_attachments = request.form.get("export_attachments") == "on"
     try:
-        output, name, mime_type, attachment_count = convert_many(files, include_original)
+        output, name, mime_type, attachment_count = convert_many(
+            files,
+            include_original,
+            export_attachments,
+        )
     except ConversionError as exc:
         return jsonify(error=str(exc)), 422
 

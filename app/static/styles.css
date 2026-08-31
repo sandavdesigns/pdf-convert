@@ -319,11 +319,17 @@ h2 {
   color: var(--muted);
 }
 
+.options {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+}
+
 .option {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
-  margin: 1.25rem 0;
+  margin: 0;
   cursor: pointer;
 }
 
