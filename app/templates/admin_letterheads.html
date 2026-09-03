@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Kopfbögen verwalten · PDF Werkzeuge{% endblock %}
+{% block content %}
+  <section class="converter" aria-labelledby="admin-title">
+    <div class="panel-heading"><div><p class="step">Verwaltung</p><h1 id="admin-title">Kopfbögen</h1><p class="panel-description">PDF-Vorlagen zentral und dauerhaft für alle Benutzer hinterlegen.</p></div><form action="{{ url_for('web.admin_logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-button" type="submit">Abmelden</button></form></div>
+    <form action="{{ url_for('web.admin_add_letterhead') }}" method="post" enctype="multipart/form-data" class="admin-upload">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="field"><span>Anzeigename</span><input type="text" name="name" maxlength="80" placeholder="z. B. Stadtwerke Standard"></label>
+      <label class="field"><span>Kopfbogen-PDF</span><input type="file" name="pdf" accept=".pdf,application/pdf" required></label>
+      <button class="primary-button" type="submit"><span>Kopfbogen speichern</span><span aria-hidden="true">＋</span></button>
+    </form>
+    <div class="template-list">
+      {% for item in letterheads %}
+        <div class="template-row"><div><strong>{{ item.name }}</strong><small>PDF-Vorlage</small></div><form action="{{ url_for('web.admin_delete_letterhead', identifier=item.id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="danger-button" type="submit">Löschen</button></form></div>
+      {% else %}
+        <div class="empty-state compact-state"><h2>Keine Kopfbögen vorhanden</h2><p>Lade oben die erste PDF-Vorlage hoch.</p></div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

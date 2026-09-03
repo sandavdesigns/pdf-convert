@@ -1,10 +1,10 @@
 <p>
-  <img src="app/static/brand/logo.svg" alt="MSG to PDF Converter" width="360">
+  <img src="app/static/brand/logo.svg" alt="PDF Werkzeuge" width="360">
 </p>
 
 [![CI](https://github.com/sandavdesigns/pdf-convert/actions/workflows/ci.yml/badge.svg)](https://github.com/sandavdesigns/pdf-convert/actions/workflows/ci.yml)
 
-Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in lesbare PDFs umwandelt. Die ursprünglichen E-Mail-Anlagen werden als echte Dateianlagen in die PDF eingebettet.
+Eine kostenlose, selbst gehostete Werkzeugzentrale für interne PDF-Abläufe. Sie archiviert Outlook-`.msg`-Dateien, bringt zentral hinterlegte Kopfbögen auf PDFs auf und trennt Dokumente nach einer frei wählbaren Seitenzahl.
 
 ## Funktionen
 
@@ -22,6 +22,10 @@ Eine kostenlose, selbst gehostete Webanwendung, die Outlook-`.msg`-Dateien in le
 - Keine dauerhafte Speicherung und keine Cloud-Dienste
 - Externe Bilder und Tracking-Inhalte werden beim Rendern blockiert
 - Für Docker und Portainer vorbereitet
+- Sachliche Werkzeugnavigation für MSG-Konvertierung, Kopfbögen und PDF-Aufteilung
+- Passwortgeschützte Kopfbogen-Verwaltung mit dauerhafter Speicherung im Docker-Volume
+- Kopfbogen auf jeder Seite, nur auf Seite 1 oder alle frei wählbaren N Seiten
+- PDF nach einer festgelegten Seitenanzahl trennen und als ZIP herunterladen
 
 > Die erzeugten Dateien sind normale PDFs mit eingebetteten Anlagen. Eine formale PDF/A-3-Validierung findet nicht statt.
 
@@ -56,6 +60,8 @@ fertige Image `ghcr.io/sandavdesigns/pdf-convert:latest`.
 
    - `PDF_CONVERT_PORT=8080`
    - `MAX_UPLOAD_MB=100`
+   - `LETTERHEAD_ADMIN_PASSWORD=ein-langes-sicheres-kennwort`
+   - `APP_SECRET_KEY=ein-langer-zufaelliger-wert`
 
 7. Stack deployen und anschließend `http://SERVER-IP:8080` öffnen.
 
@@ -80,8 +86,11 @@ docker compose ps
 | --- | ---: | --- |
 | `PDF_CONVERT_PORT` | `8080` | Veröffentlichter Host-Port |
 | `MAX_UPLOAD_MB` | `100` | Maximale Gesamtgröße eines Uploads |
+| `LETTERHEAD_ADMIN_PASSWORD` | leer | Kennwort für die unauffällig verlinkte Kopfbogen-Verwaltung; leer deaktiviert die Anmeldung |
+| `APP_SECRET_KEY` | aus dem Kennwort abgeleitet | Signiert die Verwaltungssitzung; ein eigener langer Zufallswert wird empfohlen |
+| `DATA_DIR` | `/data` im Compose-Stack | Verzeichnis für Kopfbogen-Datenbank und PDF-Vorlagen |
 
-Die Anwendung benötigt kein Volume. Temporäre Dateien liegen ausschließlich im `/tmp`-Dateisystem des Containers und werden nach jeder Konvertierung entfernt.
+Der Compose-Stack legt das benannte Volume `pdf-convert-data` an. Nur die administrativ hochgeladenen Kopfbögen und deren Datenbank bleiben dort dauerhaft gespeichert. Zu verarbeitende MSG- und PDF-Dateien liegen weiterhin ausschließlich im Arbeitsspeicher oder im temporären `/tmp`-Dateisystem und werden nach jeder Verarbeitung entfernt.
 
 ## Lokale Entwicklung
 
@@ -109,12 +118,16 @@ pytest
 3. WeasyPrint rendert Mailkopf und Nachricht als PDF.
 4. `pikepdf` bettet die Originalanlagen und optional die MSG-Datei ein.
 5. Auf Wunsch startet der Browser für PDF und Originalanlagen jeweils einen eigenen Download.
-6. Der Browser lädt das Ergebnis direkt herunter.
+6. Das Kopfbogen-Werkzeug skaliert die erste Seite der gewählten Vorlage auf die Zielseite und bringt sie als sichtbare Ebene auf.
+7. Das Trennwerkzeug erzeugt nummerierte PDF-Teile mit eindeutigen Seitenbereichen und fasst sie als ZIP zusammen.
+8. Der Browser lädt das Ergebnis direkt herunter.
 
 ## Hinweise
 
 - Eingebettete Anlagen werden am zuverlässigsten in Adobe Acrobat Reader oder einem anderen PDF-Programm mit Anlagenbereich angezeigt. Manche Browser-PDF-Ansichten blenden diesen Bereich aus.
 - Beim separaten Herunterladen kann der Browser einmalig um Erlaubnis für mehrere Downloads bitten.
+- Als Kopfbogen wird die erste Seite der administrativ hinterlegten PDF-Vorlage verwendet.
+- Bei „Alle N Seiten“ beginnt die Folge immer auf Seite 1, beispielsweise bei N = 3 auf den Seiten 1, 4, 7 usw.
 - Passwortgeschützte, beschädigte oder exotische MSG-Varianten können nicht in jedem Fall gelesen werden.
 - Das Einbetten von Dateien in eine PDF macht deren Inhalt nicht automatisch sicher. Anlagen sollten weiterhin mit einem geeigneten Virenscanner geprüft werden.
 

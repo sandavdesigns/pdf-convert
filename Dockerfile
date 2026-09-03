@@ -1,7 +1,7 @@
 FROM python:3.13-slim-bookworm
 
 LABEL org.opencontainers.image.source="https://github.com/sandavdesigns/pdf-convert" \
-      org.opencontainers.image.description="Self-hosted Outlook MSG to PDF converter" \
+      org.opencontainers.image.description="Self-hosted internal PDF toolkit" \
       org.opencontainers.image.licenses="MIT"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -30,7 +30,9 @@ COPY app ./app
 COPY wsgi.py .
 
 RUN addgroup --system app \
-    && adduser --system --ingroup app --home /nonexistent --no-create-home app
+    && adduser --system --ingroup app --home /nonexistent --no-create-home app \
+    && mkdir -p /data/letterheads \
+    && chown -R app:app /data
 
 USER app
 

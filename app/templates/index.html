@@ -1,117 +1,46 @@
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <meta id="theme-color" name="theme-color" content="#f2f5f3">
-  <title>MSG to PDF Converter</title>
-  <link rel="icon" href="{{ url_for('static', filename='brand/favicon.svg') }}" type="image/svg+xml">
-  <script src="{{ url_for('static', filename='theme.js') }}"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-  <main class="shell">
-    <div class="theme-switcher" role="group" aria-label="Farbschema">
-      <button type="button" data-theme-choice="light" aria-pressed="false" title="Helles Farbschema">
-        <svg viewBox="0 0 20 20" aria-hidden="true">
-          <circle cx="10" cy="10" r="3.25"></circle>
-          <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.35 4.35l1.4 1.4M14.25 14.25l1.4 1.4M15.65 4.35l-1.4 1.4M5.75 14.25l-1.4 1.4"></path>
-        </svg>
-        <span>Hell</span>
-      </button>
-      <button type="button" data-theme-choice="dark" aria-pressed="false" title="Dunkles Farbschema">
-        <svg viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M16.5 12.65A7 7 0 0 1 7.35 3.5 7 7 0 1 0 16.5 12.65Z"></path>
-        </svg>
-        <span>Dunkel</span>
-      </button>
-      <button type="button" data-theme-choice="auto" aria-pressed="false" title="Farbschema des Systems verwenden">
-        <svg viewBox="0 0 20 20" aria-hidden="true">
-          <rect x="2.5" y="3.5" width="15" height="10.5" rx="1.5"></rect>
-          <path d="M7 17h6M10 14v3"></path>
-        </svg>
-        <span>Auto</span>
-      </button>
+{% extends "base.html" %}
+{% block title %}MSG zu PDF · PDF Werkzeuge{% endblock %}
+{% block content %}
+  <section class="converter" aria-labelledby="converter-title">
+    <div class="panel-heading">
+      <div>
+        <p class="step">E-Mail-Archivierung</p>
+        <h1 id="converter-title">MSG zu PDF</h1>
+        <p class="panel-description">Outlook-Nachrichten als lesbare PDF mit vollständig eingebetteten Originalanlagen ausgeben.</p>
+      </div>
+      <span class="privacy-badge">Nur lokal verarbeitet</span>
     </div>
 
-    <section class="intro" aria-labelledby="page-title">
-      <div class="brand">
-        <img class="brand-mark" src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="">
-        <span>MSG to PDF Converter</span>
-      </div>
-      <p class="kicker">Interne Dokumentenverarbeitung</p>
-      <h1 id="page-title">MSG-Dateien in PDF umwandeln</h1>
-      <p class="lead">Outlook-Nachrichten werden als lesbare PDF ausgegeben. Originalanlagen bleiben als eingebettete Dateien erhalten.</p>
-      <ul class="features">
-        <li><span>01</span> Verarbeitung vollständig im lokalen System</li>
-        <li><span>02</span> Einzel- und Stapelkonvertierung</li>
-        <li><span>03</span> Originalanlagen bleiben unverändert</li>
-      </ul>
-    </section>
+    <form id="convert-form" action="{{ url_for('web.convert') }}" method="post" enctype="multipart/form-data">
+      <label class="dropzone" id="dropzone" for="files">
+        <input id="files" name="files" type="file" accept=".msg,application/vnd.ms-outlook" multiple required>
+        <span class="file-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M12 5h16l8 8v30H12z"></path><path d="M28 5v9h8M18 25h12M18 31h12"></path></svg></span>
+        <strong>MSG-Dateien hier ablegen</strong>
+        <span>oder zum Auswählen klicken</span>
+        <small>Outlook .msg · maximal {{ max_upload_mb }} MB pro Upload</small>
+      </label>
+      <div id="file-list" class="file-list" hidden></div>
 
-    <section class="converter" aria-labelledby="converter-title">
-      <div class="panel-heading">
-        <div>
-          <p class="step">Konvertierung</p>
-          <h2 id="converter-title">MSG-Dateien auswählen</h2>
-        </div>
-        <span class="privacy-badge">Nur lokal verarbeitet</span>
-      </div>
-
-      <form id="convert-form" action="{{ url_for('web.convert') }}" method="post" enctype="multipart/form-data">
-        <label class="dropzone" id="dropzone" for="files">
-          <input id="files" name="files" type="file" accept=".msg,application/vnd.ms-outlook" multiple required>
-          <span class="file-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48" role="img">
-              <path d="M12 5h16l8 8v30H12z"></path>
-              <path d="M28 5v9h8M18 25h12M18 31h12"></path>
-            </svg>
-          </span>
-          <strong>Dateien hier ablegen</strong>
-          <span>oder zum Auswählen klicken</span>
-          <small>Outlook .msg · maximal {{ max_upload_mb }} MB pro Upload</small>
+      <div class="options">
+        <label class="option">
+          <input type="checkbox" name="include_original" checked>
+          <span class="checkmark" aria-hidden="true"></span>
+          <span><strong>Originale MSG-Datei ebenfalls einbetten</strong><small>Empfohlen für eine möglichst vollständige Archivkopie</small></span>
         </label>
+        <label class="option">
+          <input type="checkbox" name="export_attachments">
+          <span class="checkmark" aria-hidden="true"></span>
+          <span><strong>Anlagen zusätzlich separat herunterladen</strong><small>Lädt PDF und Originalanlagen einzeln herunter; der Browser kann dafür eine Freigabe anfragen</small></span>
+        </label>
+      </div>
 
-        <div id="file-list" class="file-list" hidden></div>
+      <div id="error" class="message error" role="alert" hidden></div>
+      <div id="success" class="message success" role="status" hidden></div>
+      <div id="progress" class="message progress" role="status" hidden><span class="spinner" aria-hidden="true"></span>PDF wird erstellt und Anlagen werden eingebettet …</div>
+      <button class="primary-button" id="submit-button" type="submit"><span>PDF erstellen</span><span aria-hidden="true">→</span></button>
+    </form>
 
-        <div class="options">
-          <label class="option">
-            <input type="checkbox" name="include_original" checked>
-            <span class="checkmark" aria-hidden="true"></span>
-            <span>
-              <strong>Originale MSG-Datei ebenfalls einbetten</strong>
-              <small>Empfohlen für eine möglichst vollständige Archivkopie</small>
-            </span>
-          </label>
-
-          <label class="option">
-            <input type="checkbox" name="export_attachments">
-            <span class="checkmark" aria-hidden="true"></span>
-            <span>
-              <strong>Anlagen zusätzlich separat herunterladen</strong>
-              <small>Lädt PDF und Originalanlagen als einzelne Dateien herunter; der Browser kann dafür eine Freigabe anfragen</small>
-            </span>
-          </label>
-        </div>
-
-        <div id="error" class="message error" role="alert" hidden></div>
-        <div id="success" class="message success" role="status" hidden></div>
-        <div id="progress" class="message progress" role="status" hidden>
-          <span class="spinner" aria-hidden="true"></span>
-          PDF wird erstellt und Anlagen werden eingebettet …
-        </div>
-
-        <button id="submit-button" type="submit">
-          <span>PDF erstellen</span>
-          <span aria-hidden="true">→</span>
-        </button>
-      </form>
-
-      <p class="footnote">Die Dateien werden nur im Arbeitsspeicher und im temporären Container-Verzeichnis verarbeitet. Eingebettete PDF-Anlagen sind am zuverlässigsten in Adobe Acrobat Reader sichtbar.</p>
-    </section>
-  </main>
-
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
-</html>
+    <p class="footnote">Die Verarbeitung erfolgt ausschließlich im Arbeitsspeicher und temporären Container-Verzeichnis.</p>
+  </section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='app.js') }}"></script>{% endblock %}

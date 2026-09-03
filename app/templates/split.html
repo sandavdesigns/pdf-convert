@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}PDF trennen · PDF Werkzeuge{% endblock %}
+{% block content %}
+  <section class="converter" aria-labelledby="split-title">
+    <div class="panel-heading">
+      <div>
+        <p class="step">Seitenverarbeitung</p>
+        <h1 id="split-title">PDF nach Seiten trennen</h1>
+        <p class="panel-description">Ein Dokument in gleich große Seitenpakete aufteilen. Der letzte Teil enthält die verbleibenden Seiten.</p>
+      </div>
+      <span class="privacy-badge">ZIP-Ausgabe</span>
+    </div>
+    <form class="download-form" action="{{ url_for('web.split_pdf_route') }}" method="post" enctype="multipart/form-data" data-success="PDF wurde aufgeteilt und als ZIP gespeichert.">
+      <label class="dropzone compact" for="split-pdf">
+        <input id="split-pdf" name="pdf" type="file" accept=".pdf,application/pdf" required>
+        <span class="file-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M12 5h16l8 8v30H12z"></path><path d="M28 5v9h8M18 25h12M18 31h12"></path></svg></span>
+        <strong>PDF-Dokument auswählen</strong><span>oder hier ablegen</span><small>PDF · maximal {{ max_upload_mb }} MB</small>
+      </label>
+      <label class="field standalone"><span>Seiten pro Datei</span><input name="pages_per_file" type="number" min="1" max="10000" value="2" inputmode="numeric" required><small>Beispiel: 3 erzeugt Dateien mit den Seiten 1–3, 4–6, 7–9 usw.</small></label>
+      <div class="form-message message error" role="alert" hidden></div>
+      <div class="form-progress message progress" role="status" hidden><span class="spinner" aria-hidden="true"></span>PDF wird aufgeteilt …</div>
+      <button class="primary-button" type="submit"><span>PDF trennen</span><span aria-hidden="true">→</span></button>
+    </form>
+  </section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='pdf-tools.js') }}"></script>{% endblock %}

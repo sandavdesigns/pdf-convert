@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta id="theme-color" name="theme-color" content="#f2f5f3">
+  <title>{% block title %}PDF Werkzeuge{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='brand/favicon.svg') }}" type="image/svg+xml">
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <aside class="tool-sidebar">
+      <a class="brand" href="{{ url_for('web.index') }}">
+        <img class="brand-mark" src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="">
+        <span>PDF Werkzeuge</span>
+      </a>
+      <div class="nav-heading">Werkzeuge</div>
+      <nav class="tool-nav" aria-label="PDF-Werkzeuge">
+        <a href="{{ url_for('web.index') }}"{% if active_tool == 'msg' %} class="active" aria-current="page"{% endif %}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 7l8 6 8-6"></path></svg>
+          <span><strong>MSG zu PDF</strong><small>E-Mails mit Anlagen archivieren</small></span>
+        </a>
+        <a href="{{ url_for('web.letterhead_tool') }}"{% if active_tool == 'letterhead' %} class="active" aria-current="page"{% endif %}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM15 3v5h4M9 12h7M9 16h7"></path></svg>
+          <span><strong>PDF auf Kopfbogen</strong><small>Kopfbogen digital aufbringen</small></span>
+        </a>
+        <a href="{{ url_for('web.split_tool') }}"{% if active_tool == 'split' %} class="active" aria-current="page"{% endif %}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h10v14H8zM6 7H4v14h10v-2M12 10h2M12 14h2"></path></svg>
+          <span><strong>PDF trennen</strong><small>Dokumente nach Seiten teilen</small></span>
+        </a>
+      </nav>
+      <a class="admin-link" href="{{ url_for('web.admin_letterheads') }}">Verwaltung</a>
+    </aside>
+
+    <section class="workspace">
+      <div class="theme-switcher" role="group" aria-label="Farbschema">
+        <button type="button" data-theme-choice="light" aria-pressed="false" title="Helles Farbschema">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.25"></circle><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.35 4.35l1.4 1.4M14.25 14.25l1.4 1.4M15.65 4.35l-1.4 1.4M5.75 14.25l-1.4 1.4"></path></svg>
+          <span>Hell</span>
+        </button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false" title="Dunkles Farbschema">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 12.65A7 7 0 0 1 7.35 3.5 7 7 0 1 0 16.5 12.65Z"></path></svg>
+          <span>Dunkel</span>
+        </button>
+        <button type="button" data-theme-choice="auto" aria-pressed="false" title="Farbschema des Systems verwenden">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="10.5" rx="1.5"></rect><path d="M7 17h6M10 14v3"></path></svg>
+          <span>Auto</span>
+        </button>
+      </div>
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="message {{ category }}" role="status">{{ message }}</div>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

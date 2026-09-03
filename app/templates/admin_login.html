@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Verwaltung · PDF Werkzeuge{% endblock %}
+{% block content %}
+  <section class="converter narrow" aria-labelledby="admin-login-title">
+    <div class="panel-heading"><div><p class="step">Interner Bereich</p><h1 id="admin-login-title">Kopfbogen-Verwaltung</h1><p class="panel-description">Zugriff nur für berechtigte Benutzer.</p></div></div>
+    {% if configured %}
+      <form method="post" class="admin-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="field"><span>Kennwort</span><input type="password" name="password" autocomplete="current-password" required autofocus></label>
+        <button class="primary-button" type="submit"><span>Anmelden</span><span aria-hidden="true">→</span></button>
+      </form>
+    {% else %}
+      <div class="message warning">Die Verwaltung ist deaktiviert. Setze zuerst <code>LETTERHEAD_ADMIN_PASSWORD</code> in den Container-Umgebungsvariablen.</div>
+    {% endif %}
+  </section>
+{% endblock %}
