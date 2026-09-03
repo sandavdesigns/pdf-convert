@@ -144,7 +144,7 @@ def split_pdf_route():
 
 @web.route("/verwaltung/kopfboegen/anmeldung", methods=["GET", "POST"])
 def admin_login():
-    configured = bool(current_app.config["LETTERHEAD_ADMIN_PASSWORD"])
+    configured = bool(current_app.config["ADMIN_PASSWORD"])
     if request.method == "POST":
         if not _valid_csrf():
             abort(400)
@@ -152,7 +152,7 @@ def admin_login():
             flash("Die Verwaltung ist noch nicht konfiguriert.", "error")
         elif hmac.compare_digest(
             request.form.get("password", ""),
-            current_app.config["LETTERHEAD_ADMIN_PASSWORD"],
+            current_app.config["ADMIN_PASSWORD"],
         ):
             session["letterhead_admin"] = True
             return redirect(url_for("web.admin_letterheads"))

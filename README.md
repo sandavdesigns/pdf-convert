@@ -60,7 +60,7 @@ fertige Image `ghcr.io/sandavdesigns/pdf-convert:latest`.
 
    - `PDF_CONVERT_PORT=8080`
    - `MAX_UPLOAD_MB=100`
-   - `LETTERHEAD_ADMIN_PASSWORD=ein-langes-sicheres-kennwort`
+   - `ADMIN_PASSWORD=ein-langes-sicheres-kennwort`
    - `APP_SECRET_KEY=ein-langer-zufaelliger-wert`
 
 7. Stack deployen und anschließend `http://SERVER-IP:8080` öffnen.
@@ -86,7 +86,7 @@ docker compose ps
 | --- | ---: | --- |
 | `PDF_CONVERT_PORT` | `8080` | Veröffentlichter Host-Port |
 | `MAX_UPLOAD_MB` | `100` | Maximale Gesamtgröße eines Uploads |
-| `LETTERHEAD_ADMIN_PASSWORD` | leer | Kennwort für die unauffällig verlinkte Kopfbogen-Verwaltung; leer deaktiviert die Anmeldung |
+| `ADMIN_PASSWORD` | leer | Kennwort für den Verwaltungsbereich; leer deaktiviert die Anmeldung |
 | `APP_SECRET_KEY` | aus dem Kennwort abgeleitet | Signiert die Verwaltungssitzung; ein eigener langer Zufallswert wird empfohlen |
 | `DATA_DIR` | `/data` im Compose-Stack | Verzeichnis für Kopfbogen-Datenbank und PDF-Vorlagen |
 

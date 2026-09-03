@@ -69,9 +69,9 @@ def test_letterhead_admin_requires_login_and_configured_password():
     response = disabled_client.get("/verwaltung/kopfboegen")
     assert response.status_code == 302
     login = disabled_client.get(response.headers["Location"])
-    assert b"LETTERHEAD_ADMIN_PASSWORD" in login.data
+    assert b"ADMIN_PASSWORD" in login.data
 
-    test_client = client({"LETTERHEAD_ADMIN_PASSWORD": "intern-geheim"})
+    test_client = client({"ADMIN_PASSWORD": "intern-geheim"})
     with test_client.session_transaction() as admin_session:
         admin_session["csrf_token"] = "csrf-test"
     wrong = test_client.post(
@@ -87,8 +87,20 @@ def test_letterhead_admin_requires_login_and_configured_password():
     assert accepted.headers["Location"].endswith("/verwaltung/kopfboegen")
 
 
+def test_legacy_letterhead_password_environment_is_still_accepted(monkeypatch):
+    monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
+    monkeypatch.setenv("LETTERHEAD_ADMIN_PASSWORD", "bisheriges-kennwort")
+    app = create_app(
+        {
+            "TESTING": True,
+            "DATA_DIR": tempfile.mkdtemp(prefix="pdf-tools-legacy-password-test-"),
+        }
+    )
+    assert app.config["ADMIN_PASSWORD"] == "bisheriges-kennwort"
+
+
 def test_admin_upload_and_letterhead_processing():
-    test_client = client({"LETTERHEAD_ADMIN_PASSWORD": "intern-geheim"})
+    test_client = client({"ADMIN_PASSWORD": "intern-geheim"})
     with test_client.session_transaction() as admin_session:
         admin_session["letterhead_admin"] = True
         admin_session["csrf_token"] = "csrf-test"

@@ -12,6 +12,20 @@
 </head>
 <body>
   <main class="shell">
+    <div class="theme-switcher" role="group" aria-label="Farbschema">
+      <button type="button" data-theme-choice="light" aria-pressed="false" title="Helles Farbschema">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.25"></circle><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.35 4.35l1.4 1.4M14.25 14.25l1.4 1.4M15.65 4.35l-1.4 1.4M5.75 14.25l-1.4 1.4"></path></svg>
+        <span>Hell</span>
+      </button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false" title="Dunkles Farbschema">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 12.65A7 7 0 0 1 7.35 3.5 7 7 0 1 0 16.5 12.65Z"></path></svg>
+        <span>Dunkel</span>
+      </button>
+      <button type="button" data-theme-choice="auto" aria-pressed="false" title="Farbschema des Systems verwenden">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="10.5" rx="1.5"></rect><path d="M7 17h6M10 14v3"></path></svg>
+        <span>Auto</span>
+      </button>
+    </div>
     <aside class="tool-sidebar">
       <a class="brand" href="{{ url_for('web.index') }}">
         <img class="brand-mark" src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="">
@@ -36,20 +50,6 @@
     </aside>
 
     <section class="workspace">
-      <div class="theme-switcher" role="group" aria-label="Farbschema">
-        <button type="button" data-theme-choice="light" aria-pressed="false" title="Helles Farbschema">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.25"></circle><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.35 4.35l1.4 1.4M14.25 14.25l1.4 1.4M15.65 4.35l-1.4 1.4M5.75 14.25l-1.4 1.4"></path></svg>
-          <span>Hell</span>
-        </button>
-        <button type="button" data-theme-choice="dark" aria-pressed="false" title="Dunkles Farbschema">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 12.65A7 7 0 0 1 7.35 3.5 7 7 0 1 0 16.5 12.65Z"></path></svg>
-          <span>Dunkel</span>
-        </button>
-        <button type="button" data-theme-choice="auto" aria-pressed="false" title="Farbschema des Systems verwenden">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="10.5" rx="1.5"></rect><path d="M7 17h6M10 14v3"></path></svg>
-          <span>Auto</span>
-        </button>
-      </div>
       {% for category, message in get_flashed_messages(with_categories=true) %}
         <div class="message {{ category }}" role="status">{{ message }}</div>
       {% endfor %}

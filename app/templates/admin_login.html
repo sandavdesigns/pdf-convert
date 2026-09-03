@@ -10,7 +10,7 @@
         <button class="primary-button" type="submit"><span>Anmelden</span><span aria-hidden="true">→</span></button>
       </form>
     {% else %}
-      <div class="message warning">Die Verwaltung ist deaktiviert. Setze zuerst <code>LETTERHEAD_ADMIN_PASSWORD</code> in den Container-Umgebungsvariablen.</div>
+      <div class="message warning">Die Verwaltung ist deaktiviert. Setze zuerst <code>ADMIN_PASSWORD</code> in den Container-Umgebungsvariablen.</div>
     {% endif %}
   </section>
 {% endblock %}
