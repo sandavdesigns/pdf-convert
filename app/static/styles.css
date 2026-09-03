@@ -780,6 +780,10 @@ dialog,
   width: 100%;
 }
 
+.converter.tool-window {
+  min-height: 602px;
+}
+
 .converter.narrow {
   max-width: 620px;
   margin: auto;
@@ -1023,6 +1027,10 @@ code {
 
   .workspace {
     padding-top: 0;
+  }
+
+  .converter.tool-window {
+    min-height: 0;
   }
 
   .shell > .theme-switcher {
