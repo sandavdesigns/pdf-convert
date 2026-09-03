@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Kopfbögen verwalten · PDF Werkzeuge{% endblock %}
 {% block content %}
-  <section class="converter" aria-labelledby="admin-title">
+  <section class="converter tool-window" aria-labelledby="admin-title">
     <div class="panel-heading"><div><p class="step">Verwaltung</p><h1 id="admin-title">Kopfbögen</h1><p class="panel-description">PDF-Vorlagen zentral und dauerhaft für alle Benutzer hinterlegen.</p></div><form action="{{ url_for('web.admin_logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-button" type="submit">Abmelden</button></form></div>
     <form action="{{ url_for('web.admin_add_letterhead') }}" method="post" enctype="multipart/form-data" class="admin-upload">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
