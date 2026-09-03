@@ -781,7 +781,9 @@ dialog,
 }
 
 .converter.tool-window {
-  min-height: 602px;
+  height: 602px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .converter.narrow {
@@ -1030,7 +1032,9 @@ code {
   }
 
   .converter.tool-window {
-    min-height: 0;
+    height: auto;
+    overflow-y: visible;
+    scrollbar-gutter: auto;
   }
 
   .shell > .theme-switcher {
