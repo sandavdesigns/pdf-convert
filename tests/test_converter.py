@@ -67,7 +67,7 @@ def test_safe_and_unique_filenames():
     assert unique_filename("Anlage.pdf", used) == "Anlage (2).pdf"
 
 
-def test_mail_output_filename_uses_date_sender_and_shortened_subject():
+def test_mail_output_filename_uses_date_sender_and_subject():
     mail = MailData(
         subject='Meeting: Netzgebiet West / Abstimmung mit Projektteam',
         sender='Müller, David <david.mueller@example.org>',
@@ -78,8 +78,24 @@ def test_mail_output_filename_uses_date_sender_and_shortened_subject():
         attachments=(),
     )
 
-    assert mail_output_filename(mail) == "2026-02-05 Mueller.David Meeting- Netzgebiet West - Abs.pdf"
-    assert len("Meeting- Netzgebiet West - Abs") == 30
+    assert mail_output_filename(mail) == (
+        "2026-02-05 Mueller.David Meeting- Netzgebiet West - Abstimmung mit Projektteam.pdf"
+    )
+
+
+def test_mail_output_filename_limits_subject_to_100_characters():
+    mail = MailData(
+        subject="A" * 120,
+        sender="Müller, David <david.mueller@example.org>",
+        recipients="",
+        cc="",
+        date="05.02.2026, 09:15 CET",
+        body_html="",
+        attachments=(),
+    )
+
+    filename = mail_output_filename(mail)
+    assert filename == f"2026-02-05 Mueller.David {'A' * 100}.pdf"
 
 
 def test_mail_output_filename_has_safe_fallbacks():

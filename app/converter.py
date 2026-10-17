@@ -30,6 +30,7 @@ REMOTE_URL_RE = re.compile(r"^(?:https?|ftp|file):", re.IGNORECASE)
 CSS_URL_RE = re.compile(r"(?:@import\s+[^;]+;?|url\s*\([^)]*\))", re.IGNORECASE)
 CID_URL_RE = re.compile(r"cid:([^\s\"'<>\)]+)", re.IGNORECASE)
 WINDOWS_INVALID_FILENAME_RE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+SUBJECT_FILENAME_LIMIT = 100
 GERMAN_FILENAME_TRANSLATION = str.maketrans(
     {"Ä": "Ae", "Ö": "Oe", "Ü": "Ue", "ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"}
 )
@@ -97,7 +98,7 @@ def _filename_sender(value: str) -> str:
 def mail_output_filename(mail: MailData) -> str:
     subject = WINDOWS_INVALID_FILENAME_RE.sub("-", mail.subject)
     subject = re.sub(r"\s+", " ", subject).strip(" .")
-    subject = subject[:30].rstrip(" .") or "Ohne Betreff"
+    subject = subject[:SUBJECT_FILENAME_LIMIT].rstrip(" .") or "Ohne Betreff"
     filename = f"{_filename_date(mail.date)} {_filename_sender(mail.sender)} {subject}.pdf"
     return safe_filename(filename, "nachricht.pdf")
 
